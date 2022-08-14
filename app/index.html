@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Test Drive</title>
+    <!-- <base href = "TestDriveDemo/app" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="js/vendors/jquery/jquery-3.3.1.min.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="css/main.css" />
+</head>
+<body>
+    <div id="main-menu">
+        <div id="options">
+            <button class="option-btn" id="quick-play" onclick="_quickPlay()">
+                <p>Quick Play</p>
+            </button>
+            <button class="option-btn" id="events">
+                <p>Events</p>
+            </button>
+            <button class="option-btn" id="custom-play">
+                <p>Custom Play</p>
+            </button>
+            <button class="option-btn" id="settings">
+                <p>Settings</p>
+            </button>
+            <button class="option-btn" id="about">
+                <p>About</p>
+            </button>
+        </div>
+        <div id="footer-menu">
+            <div><i class="fas fa-volume-off"></i></div>
+        </div>
+    </div>
+    <div id="loader"><img src="../app/images/loader.gif"></img></div>
+    
+    <div id="game-container"></div>
+    <script src="js/main.js"></script>
+    <script src="js/controller.js"></script>
+</body>
+</html>

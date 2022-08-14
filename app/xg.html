@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html lang="en">
+
+<head>
+    <title>xg + ammo.js [game level]</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            color: #fff;
+            background-color: #000;
+            text-size-adjust: none;
+            margin: 0px;
+            padding: 0px;
+
+            font-family: Monospace;
+            font-size: 13px;
+        }
+
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            color: #ffffff;
+            padding: 5px 0px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        #loading {
+            font-weight: bold;
+            background: #fa0;
+            color: #fff;
+            padding: 0.25em 1em;
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            z-index: 200
+        }
+
+        a {
+            color: #0080ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #ff0080;
+        }
+
+        .hotkey {
+            color: #fa0;
+        }
+
+        #progressbar {
+            width: 700px;
+            height: 20px;
+            background: rgb(0, 0, 0);
+            position: absolute;
+            left: calc(50% - 350px);
+            top: calc(50% - 10px);
+            z-index: 1000;
+        }
+
+        #progressloaded {
+            width: 0px;
+            height: 20px;
+            background: rgb(255, 255, 255);
+        }
+
+        #physicsFPS {
+            position: absolute;
+            top: 10px;
+            left: 5px;
+            color: #aaa;
+            opacity: 0.9;
+            padding: 0 0 3px 3px;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9px;
+            font-weight: bold;
+            line-height: 15px
+        }
+
+        #stats {
+            position: absolute;
+            top: 10px;
+            left: 5px
+        }
+
+        #stats #fps {
+            background: transparent !important
+        }
+
+        #stats #fps #fpsText {
+            color: #aaa !important
+        }
+
+        #stats #fps #fpsGraph {
+            display: none
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">Loading ...</div>
+
+    <!-- <div id="info">
+        <a href="http://alteredqualia.com/" target="_blank">xg</a> - physically-based rendering + physics simulation + Garry's Mod atomic map by
+        <a href="http://steamcommunity.com/sharedfiles/filedetails/?id=105984257">bigwig</a> - using
+        <a href="https://github.com/kripken/ammo.js" target="_blank">ammo.js</a> physics, boxter by
+        <a href="http://archive3d.net/?a=download&id=fb592f17" target="_blank">david diaz</a>, wrangler by
+        <a href="http://archive3d.net/?a=download&id=3690e025" target="_blank">robert maillart</a>, zil by
+        <a href="http://archive3d.net/?a=download&id=c10182f4" target="_blank">kama</a>, skybox by
+        <a href="http://www.humus.name/index.php?page=Textures" target="_blank">humus</a>
+        <br/> control car with
+        <span class="hotkey">arrows</span> /
+        <span class="hotkey">WASD</span>, press
+        <span class="hotkey">space</span> for brake, select car with
+        <span class="hotkey">1</span>,
+        <span class="hotkey">2</span>,
+        <span class="hotkey">3</span>, press
+        <span class="hotkey">B</span>,
+        <span class="hotkey">N</span>,
+        <span class="hotkey">M</span> to reset cars
+        <br/> press
+        <span class="hotkey">L</span> to change lighting,
+        <span class="hotkey">P</span> to toggle depth-of-field effect,
+        <span class="hotkey">O</span> to change camera
+        <div id="physicsFPS">
+            <span class="number" id="nFPS">0</span> FPS (physics)</div>
+    </div> -->
+
+    <div id="container"></div>
+
+    <div id="progressbar">
+        <div id="progressloaded"></div>
+    </div>
+
+    <script src="js/vendors/threejs/r90/three.js"></script>
+    <script src="js/vendors/threejs/r90/js/libs/THREE.Terrain.js"></script>
+    <script src="js/OrbitControls.js"></script>
+
+    <!-- <script src="js/crunch/crn_decomp.js"></script> -->
+    <script src="js/vendors/threejs/r90/js/libs/stats.min.js"></script>
+    <script src="js/vendors/threejs/r90/js/libs/tween.min.js"></script>
+    <script src="js/xg/detector.js"></script>
+    <script src="js/xg/PhysicsSimulation.js"></script>
+    <script src="js/terrain.js"></script>
+    <script src="js/physics2.js"></script>
+</body>
+
+</html>
