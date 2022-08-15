@@ -28,7 +28,7 @@ function terrainSetup(params, scene) {
         }
     
         function setupWorld() {
-            new THREE.TextureLoader().load('../images/sky1.jpg', function (t1) {
+            new THREE.TextureLoader().load('/images/sky1.jpg', function (t1) {
                 t1.minFilter = THREE.LinearFilter; // Texture is not a power-of-two size; use smoother interpolation.
                 skyDome = new THREE.Mesh(
                     new THREE.SphereGeometry(8192, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5),
@@ -56,8 +56,8 @@ function terrainSetup(params, scene) {
             //     color: new THREE.Color(0xffffff),
             //     scale: 100,
             //     flowDirection: new THREE.Vector2(0, 0),
-            //     normalMap0 : new THREE.TextureLoader().load('../images/Water_1_M_Normal.jpg'),
-            //     normalMap1 : new THREE.TextureLoader().load('../images/Water_2_M_Normal.jpg'),
+            //     normalMap0 : new THREE.TextureLoader().load('/images/Water_1_M_Normal.jpg'),
+            //     normalMap1 : new THREE.TextureLoader().load('/images/Water_2_M_Normal.jpg'),
             //     textureWidth: 1024,
             //     textureHeight: 1024
             // });
@@ -80,7 +80,7 @@ function terrainSetup(params, scene) {
         setupWorld();
 
         // var heightmapImage = new Image();
-        // heightmapImage.src = '../images/h.png';
+        // heightmapImage.src = '/images/h.png';
 
         var mat = new THREE.MeshLambertMaterial({
             color: 0x5566aa,
@@ -106,7 +106,7 @@ function terrainSetup(params, scene) {
         };
 
         var loader = new THREE.TextureLoader();
-        loader.load('../images/sand001.jpg', function (t1) {
+        loader.load('/images/sand001.jpg', function (t1) {
             
             terrainScene = THREE.Terrain(o);
             applySmoothing( 'Gaussian (1.0, 11)', o );

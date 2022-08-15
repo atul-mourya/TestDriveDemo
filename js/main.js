@@ -270,7 +270,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
     }
 
     function _loadEnvironment() {
-        new THREE.TextureLoader().load('../images/sky1.jpg', function (t1) {
+        new THREE.TextureLoader().load('/images/sky1.jpg', function (t1) {
             t1.minFilter = THREE.LinearFilter; // Texture is not a power-of-two size; use smoother interpolation.
             skyDome = new THREE.Mesh(
                 new THREE.SphereGeometry(8192, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5),
@@ -298,8 +298,8 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
         //     color: new THREE.Color(0xffffff),
         //     scale: 100,
         //     flowDirection: new THREE.Vector2(0, 0),
-        //     normalMap0 : new THREE.TextureLoader().load('../images/Water_1_M_Normal.jpg'),
-        //     normalMap1 : new THREE.TextureLoader().load('../images/Water_2_M_Normal.jpg'),
+        //     normalMap0 : new THREE.TextureLoader().load('/images/Water_1_M_Normal.jpg'),
+        //     normalMap1 : new THREE.TextureLoader().load('/images/Water_2_M_Normal.jpg'),
         //     textureWidth: 1024,
         //     textureHeight: 1024
         // });
@@ -366,7 +366,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
 
             var blend, sand;
             var loader = new THREE.TextureLoader();
-            loader.load('../images/sand001.jpg', function (t1) {
+            loader.load('/images/sand001.jpg', function (t1) {
                 t1.wrapS = t1.wrapT = THREE.RepeatWrapping;
                 sand = new THREE.Mesh(
                     new THREE.PlaneBufferGeometry(16384 + 1024, 16384 + 1024, 1, 1),
@@ -378,12 +378,12 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
                 // sand.position.y = params.seaLevel - 101;
                 sand.rotation.x = -0.5 * Math.PI;
                 _this.scene.add(sand);
-                loader.load('../images/GrassGreenTexture0002.jpg', function (t2) {
-                    loader.load('../images/rock001.png', function (t3) {
+                loader.load('/images/GrassGreenTexture0002.jpg', function (t2) {
+                    loader.load('/images/rock001.png', function (t3) {
                         t3.wrapS = t3.wrapT = THREE.RepeatWrapping;
                         t3.repeat.x = t3.repeat.y = 20;
-                        loader.load('../images/snow1.jpg', function (t4) {
-                            loader.load('../resources/data/events/alps/lake/r_exp.png', function (t5) {
+                        loader.load('/images/snow1.jpg', function (t4) {
+                            loader.load('/resources/data/events/alps/lake/r_exp.png', function (t5) {
                                 t2.wrapS = t2.wrapT = THREE.RepeatWrapping;
                                 t2.repeat.x = t2.repeat.y = 200;
                                 blend = THREE.Terrain.generateBlendedMaterial([{
@@ -410,7 +410,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
 
                                 var blend2 = new THREE.MeshLambertMaterial({
                                     color: 0xffffff,
-                                    map: new THREE.TextureLoader().load('../resources/data/events/alps/lake/c.jpg')
+                                    map: new THREE.TextureLoader().load('/resources/data/events/alps/lake/c.jpg')
                                 });
 
                                 var terrainWidth = _global.level.alps.lake.map.size[0];
