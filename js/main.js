@@ -325,7 +325,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
             var l = _global.level.alps.lake.map.model;
 
             var heightmapImage = new Image();
-            heightmapImage.src = _global.level.alps.lake.map.heightMap;
+            heightmapImage.src = baseUrl + _global.level.alps.lake.map.heightMap;
 
             var loader = new THREE.ObjectLoader();
             loader.load(l, function(obj) {
@@ -362,7 +362,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
         return new Promise(function(resolve, reject) {
 
             var heightmapImage = new Image();
-            heightmapImage.src = _global.level.alps.lake.map.heightMap;
+            heightmapImage.src = baseUrl + _global.level.alps.lake.map.heightMap;
 
             var blend, sand;
             var loader = new THREE.TextureLoader();
@@ -466,7 +466,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
         return new Promise(function(resolve, reject){
             
             var heightmapImage = new Image();
-            heightmapImage.src = _global.level.alps.lake.map.heightMap;
+            heightmapImage.src = baseUrl + _global.level.alps.lake.map.heightMap;
 
             var terrainWidth = _global.level.alps.lake.map.size[0];
             var terrainDepth = _global.level.alps.lake.map.size[1];
