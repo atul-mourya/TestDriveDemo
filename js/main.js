@@ -270,7 +270,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
     }
 
     function _loadEnvironment() {
-        new THREE.TextureLoader().load('../images/sky1.jpg', function (t1) {
+        new THREE.TextureLoader().load('./images/sky1.jpg', function (t1) {
             t1.minFilter = THREE.LinearFilter; // Texture is not a power-of-two size; use smoother interpolation.
             skyDome = new THREE.Mesh(
                 new THREE.SphereGeometry(8192, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5),
