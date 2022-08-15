@@ -94,10 +94,10 @@ var PostProcessingManager = function (data, scene, camera, renderer, width, heig
         return new Promise(function(resolve, reject) {
             var filesToLoad = [
                 [   
-                    "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/EffectComposer.js", 
-                    "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/CopyShader.js",   
-                    "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/RenderPass.js",   
-                    "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/ShaderPass.js"   
+                    "/js/vendors/threejs/r90/js/postprocessing/EffectComposer.js", 
+                    "/js/vendors/threejs/r90/js/postprocessing/CopyShader.js",   
+                    "/js/vendors/threejs/r90/js/postprocessing/RenderPass.js",   
+                    "/js/vendors/threejs/r90/js/postprocessing/ShaderPass.js"   
                 ]
             ];
 
@@ -106,22 +106,22 @@ var PostProcessingManager = function (data, scene, camera, renderer, width, heig
 
             var dependencies = 
             {
-                bloom_dependency    : ["/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/LuminosityHighPassShader.js"],
-                glitch_dependency   : ["/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/DigitalGlitch.js"]  
+                bloom_dependency    : ["/js/vendors/threejs/r90/js/postprocessing/LuminosityHighPassShader.js"],
+                glitch_dependency   : ["/js/vendors/threejs/r90/js/postprocessing/DigitalGlitch.js"]  
             };
 
             var scripts = 
             {
-                msaa            : { url: "/TestDriveDemo/app/js/vendors/wagner/ManualMSAARenderPass.js"},
-                mask            : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/MaskPass.js"},
-                fxaa            : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/FXAAShader.js"},
-                bloom           : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/UnrealBloomPass.js", dependency: "bloom_dependency" },
-                vignette        : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/VignetteShader.js"},
-                colorCorrection : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/ColorCorrectionShader.js"},
-                hblur           : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/HorizontalTiltShiftShader.js"},
-                vblur           : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/VerticalTiltShiftShader.js"},
-                rgbShift        : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/RGBShiftShader.js"},
-                glitch          : { url: "/TestDriveDemo/app/js/vendors/threejs/r90/js/postprocessing/GlitchPass.js", dependency: "glitch_dependency"},
+                msaa            : { url: "/js/vendors/wagner/ManualMSAARenderPass.js"},
+                mask            : { url: "/js/vendors/threejs/r90/js/postprocessing/MaskPass.js"},
+                fxaa            : { url: "/js/vendors/threejs/r90/js/postprocessing/FXAAShader.js"},
+                bloom           : { url: "/js/vendors/threejs/r90/js/postprocessing/UnrealBloomPass.js", dependency: "bloom_dependency" },
+                vignette        : { url: "/js/vendors/threejs/r90/js/postprocessing/VignetteShader.js"},
+                colorCorrection : { url: "/js/vendors/threejs/r90/js/postprocessing/ColorCorrectionShader.js"},
+                hblur           : { url: "/js/vendors/threejs/r90/js/postprocessing/HorizontalTiltShiftShader.js"},
+                vblur           : { url: "/js/vendors/threejs/r90/js/postprocessing/VerticalTiltShiftShader.js"},
+                rgbShift        : { url: "/js/vendors/threejs/r90/js/postprocessing/RGBShiftShader.js"},
+                glitch          : { url: "/js/vendors/threejs/r90/js/postprocessing/GlitchPass.js", dependency: "glitch_dependency"},
             };
 
             passes.forEach(function(element){

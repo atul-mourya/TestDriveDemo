@@ -8,9 +8,9 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
-                "heightMap": "../app/resources/data/events/alps/green/h.png",
+                "heightMap": "../resources/data/events/alps/green/h.png",
                 "smooth": "none",
-                "model": "../app/resources/data/events/alps/green/model.json"
+                "model": "../resources/data/events/alps/green/model.json"
             }
         },
         "lake": {
@@ -22,9 +22,9 @@
                 "size": [800, 800],
                 "heightRange": [40, -40],
                 "seaLevel": -13.5,
-                "heightMap": "../app/resources/data/events/alps/lake/h.png",
+                "heightMap": "../resources/data/events/alps/lake/h.png",
                 "smooth": "none",
-                "model": "../app/resources/data/events/alps/lake/model.json"
+                "model": "../resources/data/events/alps/lake/model.json"
             }
         },
         "mountain": {
@@ -35,7 +35,7 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
-                "heightMap": "../app/resources/data/events/alps/mountain/h.png",
+                "heightMap": "../resources/data/events/alps/mountain/h.png",
                 "smooth": "none"
             }
         },
@@ -47,7 +47,7 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
-                "heightMap": "../app/resources/data/events/alps/rocky/h.png",
+                "heightMap": "../resources/data/events/alps/rocky/h.png",
                 "smooth": "none"
             }
         },
@@ -59,7 +59,7 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
-                "heightMap": "../app/resources/data/events/alps/dawn/h.png",
+                "heightMap": "../resources/data/events/alps/dawn/h.png",
                 "smooth": "none"
             }
         }
@@ -73,7 +73,7 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
-                "heightMap": "../app/resources/data/events/chasing/daybreak/h.png",
+                "heightMap": "../resources/data/events/chasing/daybreak/h.png",
                 "smooth": "none"
             }
         }
