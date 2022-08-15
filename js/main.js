@@ -383,7 +383,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
                         t3.wrapS = t3.wrapT = THREE.RepeatWrapping;
                         t3.repeat.x = t3.repeat.y = 20;
                         loader.load('./images/snow1.jpg', function (t4) {
-                            loader.load('./resources/data/events/alps/lake/r_exp.png', function (t5) {
+                            loader.load(baseUrl + '/resources/data/events/alps/lake/r_exp.png', function (t5) {
                                 t2.wrapS = t2.wrapT = THREE.RepeatWrapping;
                                 t2.repeat.x = t2.repeat.y = 200;
                                 blend = THREE.Terrain.generateBlendedMaterial([{
@@ -410,7 +410,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
 
                                 var blend2 = new THREE.MeshLambertMaterial({
                                     color: 0xffffff,
-                                    map: new THREE.TextureLoader().load('./resources/data/events/alps/lake/c.jpg')
+                                    map: new THREE.TextureLoader().load(baseUrl + '/resources/data/events/alps/lake/c.jpg')
                                 });
 
                                 var terrainWidth = _global.level.alps.lake.map.size[0];
