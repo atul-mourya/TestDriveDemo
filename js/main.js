@@ -71,6 +71,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
         rendererGammaOutput     : true,
         fpsLimit                : 30,    // frame per second 
         enableShadow            : false,
+        resolution              : 0.25,
 
         postprocessing          : false,
         
@@ -130,7 +131,7 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
             alpha: false,
         });
 
-        _global.renderer.setPixelRatio(window.devicePixelRatio);
+        _global.renderer.setPixelRatio(window.devicePixelRatio * _this.setting.resolution);
         _global.renderer.setClearColor(new THREE.Color(0x000000, 1.0));
 
         _global.canvas                    = _global.renderer.domElement;
@@ -286,23 +287,23 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
             scene.add(skyDome);
         });
 
-        water = new THREE.Mesh(
-            new THREE.PlaneBufferGeometry(16384 + 1024, 16384 + 1024, 16, 16),
-            new THREE.MeshBasicMaterial({
-                color: 0x006ba0,
-                transparent: true,
-                opacity: 0.6
-            })
-        );
-        // water = new THREE.Water(new THREE.PlaneBufferGeometry(16384 + 1024, 16384 + 1024, 16, 16), {
-        //     color: new THREE.Color(0xffffff),
-        //     scale: 100,
-        //     flowDirection: new THREE.Vector2(0, 0),
-        //     normalMap0 : new THREE.TextureLoader().load('./images/Water_1_M_Normal.jpg'),
-        //     normalMap1 : new THREE.TextureLoader().load('./images/Water_2_M_Normal.jpg'),
-        //     textureWidth: 1024,
-        //     textureHeight: 1024
-        // });
+        // water = new THREE.Mesh(
+        //     new THREE.PlaneBufferGeometry(16384 + 1024, 16384 + 1024, 16, 16),
+        //     new THREE.MeshBasicMaterial({
+        //         color: 0x006ba0,
+        //         transparent: true,
+        //         opacity: 0.6
+        //     })
+        // );
+        water = new THREE.Water(new THREE.PlaneBufferGeometry(16384 + 1024, 16384 + 1024, 16, 16), {
+            color: new THREE.Color(0xffffff),
+            scale: 100,
+            flowDirection: new THREE.Vector2(0, 0),
+            normalMap0 : new THREE.TextureLoader().load('./images/Water_1_M_Normal.jpg'),
+            normalMap1 : new THREE.TextureLoader().load('./images/Water_2_M_Normal.jpg'),
+            textureWidth: 1024,
+            textureHeight: 1024
+        });
         water.position.y = _global.level.alps.lake.map.seaLevel;
         water.rotation.x = -0.5 * Math.PI;
         water.name = 'Water';
@@ -659,11 +660,11 @@ var AbstractTestDrive = function(data,loadingManager,scripts,onGameReady) {
     }
 
     function _animateFrame() {
-        // setTimeout(function () {
+        setTimeout(function () {
 
             requestAnimationFrame(_animateFrame);
 
-        // }, 1000 / _this.setting.fpsLimit);
+        }, 1000 / _this.setting.fpsLimit);
 
         
         if (_this.sceneReady && (_global.doAnimate == true || _this.setting.userControlledAimation == true)) {
