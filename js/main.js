@@ -1,6 +1,28 @@
 import ImportAssets from './AssetManager';
 import Physics from './physics';
-import { TextureLoader } from 'three';
+import {
+	WebGLRenderer,
+	TextureLoader,
+	Clock,
+	Cache,
+	Scene,
+	Color,
+	Fog,
+	PerspectiveCamera,
+	PlaneBufferGeometry,
+	LinearFilter,
+	Mesh,
+	SphereGeometry,
+	MeshBasicMaterial,
+	Vector2,
+	DirectionalLight,
+	AmbientLight,
+	BackSide
+} from 'three';
+import { Water } from 'three/examples/jsm/objects/Water2';
+// import Terrain from './vendors/terrain/THREE.Terrain';
+// import { Reflector } from 'three/examples/jsm/objects/Reflector';
+// import { Refractor } from 'three/examples/jsm/objects/Refractor';
 function isElement( obj ) {
 
 	try {
@@ -119,12 +141,12 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 				console.log( 'scripts are loaded' );
 				_global.client = new ClientJS();
-				_global.clock = new THREE.Clock();
+				_global.clock = new Clock();
 				resolve();
 
-			} ).catch( function () {
+			} ).catch( e => {
 
-				console.log( "Error" );
+				console.log( "Error", e );
 
 			} );
 
@@ -134,7 +156,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	function _init() {
 
-		THREE.Cache.enabled = true;
+		Cache.enabled = true;
 		_initScene();
 		_initRenderer();
 		_initCamera();
@@ -148,10 +170,10 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	function _initScene() {
 
-		_this.scene = new THREE.Scene();
+		_this.scene = new Scene();
 		_this.scene.name = "Scene";
-		_this.scene.background = new THREE.Color( 0xffffff );
-		_this.scene.fog = new THREE.Fog( 0, 0.1, 0 );
+		_this.scene.background = new Color( 0xffffff );
+		_this.scene.fog = new Fog( 0, 0.1, 0 );
 		_animateFrame();
 
 		if ( tracker.exportScene == true ) window.scene = _this.scene;
@@ -160,13 +182,13 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	function _initRenderer() {
 
-		_global.renderer = new THREE.WebGLRenderer( {
+		_global.renderer = new WebGLRenderer( {
 			antialias: _this.setting.antialias,
 			alpha: false,
 		} );
 
 		_global.renderer.setPixelRatio( window.devicePixelRatio * _this.setting.resolution );
-		_global.renderer.setClearColor( new THREE.Color( 0x000000, 1.0 ) );
+		_global.renderer.setClearColor( new Color( 0x000000, 1.0 ) );
 
 		_global.canvas = _global.renderer.domElement;
 		_global.canvas.style.position = "absolute";
@@ -185,7 +207,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	function _initCamera() {
 
-		_this.camera = new THREE.PerspectiveCamera( 45, _global.canvas.width / _global.canvas.height, 0.1, 5000 );
+		_this.camera = new PerspectiveCamera( 45, _global.canvas.width / _global.canvas.height, 0.1, 5000 );
 		// _this.camera.lookAt(0, _this.setting.ground_clearence, 0);
 
 	}
@@ -214,152 +236,17 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		// });
 
 	};
-	// function _importAssets() {
-
-	// 	var fileloader = new THREE.FileLoader();
-	// 	fileloader.load( _global.data.url, function ( text ) {
-
-	// 		var json = JSON.parse( text );
-
-	// 		function onLoad() {
-
-	// 			_refreshRenderFrame();
-	// 			loaded = true;
-
-	// 		}
-
-	// 		function onError() {
-
-	// 			_global.loadingManager.onError();
-
-	// 		}
-
-	// 		function onProgress( url, itemsLoaded, itemsTotal ) {
-
-	// 			_global.loadingManager.onProgress( url, itemsLoaded, itemsTotal );
-
-	// 		}
-
-	// 		if ( json.data.base_car ) {
-
-	// 			var loadingManager = new LoadingManager( onLoad, onProgress, onError );
-
-	// 			Promise.all( [
-
-	// 				_loadBaseParts( json.data.base_car, loadingManager ),
-	// 				_loadGameData( json.data.game_type, loadingManager ),
-
-	// 			] ).then( _loadLevel )
-	// 				.then( _createHeightField ).then( function ( heightData ) {
-
-	// 					console.log( 'Environment, car and standard parts loaded' );
-	// 					_this.sceneReady = true;
-	// 					_global.loadingManager.onLoad();
-
-	// 					_global.carBody.position.x = _global.level.alps.lake.car.origin[ 0 ];
-	// 					_global.carBody.position.y = _global.level.alps.lake.car.origin[ 1 ];
-	// 					_global.carBody.position.z = _global.level.alps.lake.car.origin[ 2 ];
-
-	// 					_global.carBody.quaternion.x = _global.level.alps.lake.car.orientation[ 0 ];
-	// 					_global.carBody.quaternion.y = _global.level.alps.lake.car.orientation[ 1 ];
-	// 					_global.carBody.quaternion.z = _global.level.alps.lake.car.orientation[ 2 ];
-	// 					_global.carBody.quaternion.w = _global.level.alps.lake.car.orientation[ 3 ];
-
-
-	// 					// _this.camera.lookAt(_global.carBody.position);
-	// 					// _this.camera.position.set(-9,8,31);
-	// 					// var passes = [
-	// 					//     {   type: "msaa",
-	// 					//         config:{"sampleLevel":2}
-	// 					//     }
-	// 					// ];
-	// 					// if ( _this.setting.postprocessing && passes.length > 0){
-	// 					//     _global.msaaFilterActive = true;
-	// 					//     _global.postProcessor = new PostProcessingManager( data, _this.scene, _this.camera, _global.renderer, _this.container.clientWidth, _this.container.clientHeight, passes);
-	// 					// }
-	// 					var initAmmo = true;
-
-	// 					var onPhysicsReady = function () {
-
-	// 						// _loadLevel().then(function () {
-	// 						_loadEnvironment();
-	// 						onGameReady();
-	// 						// });
-
-	// 					};
-
-	// 					if ( initAmmo ) {
-
-	// 						_this.physics = new Physics( _global.envMeshes, _global.carBody, _global.wheels, _this.camera, heightData, onPhysicsReady );
-
-	// 					}
-
-	// 				} );
-
-	// 		}
-
-	// 	} );
-
-	// }
-
-	function _loadBaseParts( model, loadManager ) {
-
-		return new Promise( function ( resolve, reject ) {
-
-			_global.storedMaterial = {};
-			_global.envMapComponent = [];
-			_global.wheels = [];
-
-			model.url = _global.data.cdn + model.url;
-			var modelPath = model.url.substring( 0, model.url.lastIndexOf( "/" ) + 1 );
-
-			var loader = new THREE.ObjectLoader( loadManager );
-			loader.setCrossOrigin( "anonymous" );
-			loader.setTexturePath( modelPath + "textures/" );
-			// loader.setModelPath(modelPath);
-			loader.load( model.url, function ( base ) {
-
-				_organiseObjects( base, "Car" );
-				_global.baseParts = base;
-				console.debug( "loaded base parts" );
-				resolve();
-
-			} );
-
-		} );
-
-	}
-
-	function _loadGameData( json, loadManager ) {
-
-		return new Promise( function ( resolve, reject ) {
-
-			var l = _global.data.cdn + json.events.url;
-
-			var loader = new THREE.FileLoader( loadManager );
-			loader.load( l, function ( text ) {
-
-				var level = JSON.parse( text );
-				_global.level = level;
-
-				resolve();
-
-			} );
-
-		} );
-
-	}
 
 	function _loadEnvironment() {
 
 		new TextureLoader().load( './images/sky1.jpg', function ( t1 ) {
 
-			t1.minFilter = THREE.LinearFilter; // Texture is not a power-of-two size; use smoother interpolation.
-			const skyDome = new THREE.Mesh(
-				new THREE.SphereGeometry( 8192, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5 ),
-				new THREE.MeshBasicMaterial( {
+			t1.minFilter = LinearFilter; // Texture is not a power-of-two size; use smoother interpolation.
+			const skyDome = new Mesh(
+				new SphereGeometry( 8192, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5 ),
+				new MeshBasicMaterial( {
 					map: t1,
-					side: THREE.BackSide,
+					side: BackSide,
 					fog: false
 				} )
 			);
@@ -378,12 +265,12 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		//         opacity: 0.6
 		//     })
 		// );
-		const water = new THREE.Water( new THREE.PlaneBufferGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
-			color: new THREE.Color( 0xffffff ),
+		const water = new Water( new PlaneBufferGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
+			color: new Color( 0xffffff ),
 			scale: 100,
-			flowDirection: new THREE.Vector2( 0, 0 ),
-			normalMap0: new THREE.TextureLoader().load( './images/Water_1_M_Normal.jpg' ),
-			normalMap1: new THREE.TextureLoader().load( './images/Water_2_M_Normal.jpg' ),
+			flowDirection: new Vector2( 0, 0 ),
+			normalMap0: new TextureLoader().load( './images/Water_1_M_Normal.jpg' ),
+			normalMap1: new TextureLoader().load( './images/Water_2_M_Normal.jpg' ),
 			textureWidth: 1024,
 			textureHeight: 1024
 		} );
@@ -392,335 +279,14 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		water.name = 'Water';
 		_this.scene.add( water );
 
-		const skyLight = new THREE.DirectionalLight( 0xe8bdb0, 1.5 );
+		const skyLight = new DirectionalLight( 0xe8bdb0, 1.5 );
 		skyLight.position.set( 2950, 2625, - 160 );
 		skyLight.name = "Sun Light";
 
 		_this.scene.add( skyLight );
 
-		var light = new THREE.AmbientLight( 0x888888 );
+		var light = new AmbientLight( 0x888888 );
 		_this.scene.add( light );
-
-	}
-
-	function _loadLevel1() {
-
-		return new Promise( function ( resolve, reject ) {
-
-			var l = _global.level.alps.lake.map.model;
-
-			var heightmapImage = new Image();
-			heightmapImage.src = baseUrl + _global.level.alps.lake.map.heightMap;
-
-			var loader = new THREE.ObjectLoader();
-			loader.load( l, function ( obj ) {
-
-				// obj.rotation.set(0,0,0);
-				var o = {
-					easing: THREE.Terrain.Linear,
-					heightmap: heightmapImage,
-					maxHeight: 50,
-					minHeight: - 50,
-					smoothing: 'Gaussian (1.0, 11)',
-					steps: 1,
-					stretch: true,
-					turbulent: false,
-					useBufferGeometry: false,
-					xSize: _global.level.alps.lake.map.size[ 0 ],
-					ySize: _global.level.alps.lake.map.size[ 1 ],
-					xSegments: 499,
-					ySegments: 499,
-					optimization: THREE.Terrain.None,
-				};
-				// debugger
-				// THREE.Terrain.Gaussian(obj.geometry.vertices, o, 1, 11);
-				// THREE.Terrain.Normalize(obj, o);
-
-				_this.scene.add( obj );
-
-				resolve();
-
-			} );
-
-		} );
-
-	}
-
-	function _loadLevel() {
-
-		return new Promise( function ( resolve, reject ) {
-
-			var heightmapImage = new Image();
-			heightmapImage.src = baseUrl + _global.level.alps.lake.map.heightMap;
-
-			var blend, sand;
-			var loader = new THREE.TextureLoader();
-			loader.load( './images/sand001.jpg', function ( t1 ) {
-
-				t1.wrapS = t1.wrapT = THREE.RepeatWrapping;
-				sand = new THREE.Mesh(
-					new THREE.PlaneBufferGeometry( 16384 + 1024, 16384 + 1024, 1, 1 ),
-					new THREE.MeshLambertMaterial( {
-						map: t1
-					} )
-				);
-				sand.position.y = - 50;
-				// sand.position.y = params.seaLevel - 101;
-				sand.rotation.x = - 0.5 * Math.PI;
-				_this.scene.add( sand );
-				loader.load( './images/GrassGreenTexture0002.jpg', function ( t2 ) {
-
-					loader.load( './images/rock001.png', function ( t3 ) {
-
-						t3.wrapS = t3.wrapT = THREE.RepeatWrapping;
-						t3.repeat.x = t3.repeat.y = 20;
-						loader.load( './images/snow1.jpg', function ( t4 ) {
-
-							loader.load( baseUrl + '/resources/data/events/alps/lake/r_exp.png', function ( t5 ) {
-
-								t2.wrapS = t2.wrapT = THREE.RepeatWrapping;
-								t2.repeat.x = t2.repeat.y = 200;
-								blend = THREE.Terrain.generateBlendedMaterial( [ {
-									texture: t1
-								},
-								{
-									texture: t2,
-									levels: [ - 40, - 20, 20, 30 ]
-								},
-								{
-									texture: t3,
-									levels: [ 20, 50, 60, 85 ]
-								},
-								{
-									texture: t4,
-									glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)'
-								},
-								{
-									texture: t3,
-									glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2'
-								}, // between 27 and 45 degrees
-
-								] );
-
-								var blend2 = new THREE.MeshLambertMaterial( {
-									color: 0xffffff,
-									map: new THREE.TextureLoader().load( baseUrl + '/resources/data/events/alps/lake/c.jpg' )
-								} );
-
-								var terrainWidth = _global.level.alps.lake.map.size[ 0 ];
-								var terrainDepth = _global.level.alps.lake.map.size[ 1 ];
-								var terrainMaxHeight = _global.level.alps.lake.map.heightRange[ 0 ];
-								var terrainMinHeight = _global.level.alps.lake.map.heightRange[ 1 ];
-
-								var o = {
-									xSize: terrainWidth,
-									ySize: terrainDepth,
-									xSegments: terrainWidth - 1,
-									ySegments: terrainDepth - 1,
-									maxHeight: terrainMaxHeight,
-									minHeight: terrainMinHeight,
-									easing: THREE.Terrain.Linear,
-									heightmap: heightmapImage,
-									smoothing: 'Gaussian (1.0, 11)',
-									optimization: THREE.Terrain.POLYGONREDUCTION,
-									frequency: 2.5,
-									steps: 1,
-									stretch: true,
-									turbulent: false,
-									useBufferGeometry: false,
-									material: blend,
-
-									//trees spread
-									seaLevel: _global.level.alps.lake.map.seaLevel
-
-								};
-
-								var level = THREE.Terrain( o );
-
-								//potential cause of offset in mesh layers
-								THREE.Terrain.Gaussian( level.children[ 0 ].geometry.vertices, o, 1, 11 );
-								THREE.Terrain.Normalize( level.children[ 0 ], o );
-
-								level.name = "TerrainVisible";
-								_this.scene.add( level );
-								_global.terrainObj = level;
-								console.debug( "loaded base parts" );
-
-								resolve();
-
-							} );
-
-						} );
-
-					} );
-
-				} );
-
-			} );
-
-		} );
-
-	}
-
-	function _createHeightField() {
-
-		return new Promise( function ( resolve, reject ) {
-
-			var heightmapImage = new Image();
-			heightmapImage.src = baseUrl + _global.level.alps.lake.map.heightMap;
-
-			var terrainWidth = _global.level.alps.lake.map.size[ 0 ];
-			var terrainDepth = _global.level.alps.lake.map.size[ 1 ];
-			var terrainMaxHeight = _global.level.alps.lake.map.heightRange[ 0 ];
-			var terrainMinHeight = _global.level.alps.lake.map.heightRange[ 1 ];
-
-			var params = {
-				xSize: terrainWidth,
-				ySize: terrainDepth,
-				xSegments: terrainWidth - 1,
-				ySegments: terrainDepth - 1,
-				maxHeight: terrainMaxHeight,
-				minHeight: terrainMinHeight,
-				easing: THREE.Terrain.Linear,
-				heightmap: heightmapImage,
-				smoothing: 'Gaussian (1.0, 11)',
-				optimization: THREE.Terrain.POLYGONREDUCTION,
-				frequency: 2.5,
-				steps: 1,
-				stretch: true,
-				turbulent: false,
-				useBufferGeometry: false,
-
-				//trees spread
-				seaLevel: _global.level.alps.lake.map.seaLevel,
-				spread: 0.2,
-				scattering: 'Linear',
-
-			};
-
-			// terrainSetup(params, scene).then(function (output) {
-
-			// scene.add(output.terrain);
-			var heightData = THREE.Terrain.toArray1D( _global.terrainObj.children[ 0 ].geometry.vertices );
-			// disposeObjMemory(output.terrain);
-
-			var data = {
-				heightData: heightData,
-				terrainWidth: terrainWidth,
-				terrainDepth: terrainDepth,
-				terrainMaxHeight: terrainMaxHeight,
-				terrainMinHeight: terrainMinHeight
-			};
-
-
-			resolve( data );
-
-			// });
-
-		} );
-
-	}
-
-	function _loadCubeMap( path, callback, loadManager ) {
-
-		var format = '.jpg';
-		var urls = [
-			path + 'r' + format, path + 'l' + format,
-			path + 'u' + format, path + 'd' + format,
-			path + 'f' + format, path + 'b' + format
-		];
-		var reflectionCube = new THREE.CubeTextureLoader( loadManager ).load( urls, callback );
-		return reflectionCube;
-
-	}
-
-	function _organiseObjects( obj, name ) {
-
-		if ( obj.type === "Group" || obj.type === "Scene" ) {
-
-			obj.name = name;
-
-			var length = obj.children.length;
-			for ( var i = 0; i < length; i ++ ) {
-
-				if ( obj.children[ i ].type == "Group" ) {
-
-					obj.children[ i ].children.forEach( function ( object ) {
-
-						_applyObjectSetups( object );
-
-					} );
-
-					if ( obj.children[ i ].userData.isWheel ) {
-
-						_global.wheels.push( obj.children[ i ] );
-
-					} else {
-
-						_global.carBody.add( obj.children[ i ] );
-
-					}
-
-				} else {
-
-					_applyObjectSetups( obj.children[ i ] );
-
-					if ( ! obj.children[ i ].userData.isWheel && _global.carBody ) {
-
-						if ( _global.carBody.name != "body" ) _global.carBody.add( obj.children[ i ] );
-
-					}
-
-				}
-
-			}
-
-			for ( var i = 0; i < length; i ++ ) {
-
-				if ( ! obj.children[ i ].userData.isWheel && _global.carBody && obj.children[ i ].name != "body" ) {
-
-					_global.carBody.add( obj.children[ i ].clone() );
-
-				}
-
-			}
-
-			// _this.scene.add( obj );
-
-		}
-
-
-	}
-
-	function _applyObjectSetups( obj ) {
-
-		obj.geometry = new THREE.BufferGeometry().fromGeometry( obj.geometry );
-		obj.geometry.setDrawRange( 0, obj.geometry.attributes.position.count );
-		obj.material.fog = _this.setting.fogEffectOnCar;
-		obj.material.needsUpdate = false;
-		obj.castShadow = false;
-		obj.receiveShadow = false;
-		if ( obj.name == "body" ) {
-
-			_global.storedMaterial.body = obj.material;
-			_global.carBody = obj;
-
-		}
-
-		_fetchEnvMapComponent( obj );
-
-	}
-
-	function _fetchEnvMapComponent( obj ) {
-
-		if ( obj.material.envMap && ( obj.material.userData.blurredEnvMap == undefined || obj.material.userData.blurredEnvMap == false ) ) {
-
-			_global.envMapComponent.push( obj );
-			obj.material.envMap.dispose();
-			obj.material.envMap = _global.reflectionCube;
-			obj.material.needsUpdate = true;
-
-		}
 
 	}
 
@@ -734,25 +300,6 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		// } else {
 		_global.renderer.render( _this.scene, _this.camera );
 		// }
-
-	}
-
-	function _animate( doAnimate, timeout ) {
-
-		_global.doAnimate = doAnimate;
-		if ( timeout ) {
-
-			return new Promise( function ( resolve, reject ) {
-
-				setTimeout( function () {
-
-					resolve();
-
-				}, timeout );
-
-			} );
-
-		}
 
 	}
 
@@ -784,7 +331,13 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		if ( _this.sceneReady && ( _global.doAnimate == true || _this.setting.userControlledAimation == true ) ) {
 
 			// _this.controls.update();
-			if ( tracker.analysis ) _this.rendererStats.update( _global.renderer ), _this.stats.update();
+			if ( tracker.analysis ) {
+
+				// _this.rendererStats.update( _global.renderer );
+				_this.stats.update();
+
+			}
+
 			_render();
 
 		}
@@ -929,26 +482,26 @@ const TestDrive = function ( data, loadingManager, onGameReady ) {
 
 	var scripts = [
 		[
-			"/js/vendors/threejs/r90/three.js",
+			// "/js/vendors/threejs/r90/three.js",
 			"/js/vendors/ammo/ammo.js",
 		],
 		[
-			"/js/vendors/threejs/r90/js/libs/THREE.Terrain.js",
-			"/js/vendors/threejs/r90/js/libs/Reflector.js",
-			"/js/vendors/threejs/r90/js/libs/Refractor.js",
-			"/js/vendors/threejs/r90/js/libs/Water2.js",
+			// "/js/vendors/terrain/THREE.Terrain.js",
+			// "/js/vendors/threejs/r90/js/libs/Reflector.js",
+			// "/js/vendors/threejs/r90/js/libs/Refractor.js",
+			// "/js/vendors/threejs/r90/js/libs/Water2.js",
 		],
 		[
-			"/js/vendors/terrain/weightedBoxBlurGaussian.js",
-			"/js/vendors/terrain/gaussian.js",
-			"/js/vendors/terrain/brownian.js",
-			"/js/vendors/terrain/worley.js",
+			// "/js/vendors/terrain/weightedBoxBlurGaussian.js",
+			// "/js/vendors/terrain/gaussian.js",
+			// "/js/vendors/terrain/brownian.js",
+			// "/js/vendors/terrain/worley.js",
 		],
-		[
+		// [
 
-			"/js/terrain2.js",
+		// 	"/js/terrain2.js",
 
-		],
+		// ],
 		[
 			// "/js/physics.js",
 			"/js/vendors/threex/threex.rendererstats.js",
@@ -957,7 +510,6 @@ const TestDrive = function ( data, loadingManager, onGameReady ) {
 
 		],
 		[
-			"/js/iAtulJsonLoader.js",
 			"/js/PostProcessor.js"
 		]
 	];

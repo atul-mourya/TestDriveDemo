@@ -1,13 +1,14 @@
 import {
 	EventDispatcher,
 	ObjectLoader,
-	BufferGeometry,
 	TextureLoader,
 	RepeatWrapping,
 	Mesh,
 	PlaneBufferGeometry,
 	MeshLambertMaterial
 } from "three";
+import Terrain from './vendors/terrain/THREE.Terrain';
+import Gaussian from "./vendors/terrain/gaussian";
 
 var baseUrl = null;
 window.location.origin || ( window.location.origin = window.location.protocol + "//" + window.location.hostname + ( window.location.port ? ":" + window.location.port : "" ) ),
@@ -213,7 +214,7 @@ class ImportAssets extends EventDispatcher {
 
 				// obj.rotation.set(0,0,0);
 				var o = {
-					easing: THREE.Terrain.Linear,
+					easing: Terrain.Linear,
 					heightmap: heightmapImage,
 					maxHeight: 50,
 					minHeight: - 50,
@@ -226,11 +227,11 @@ class ImportAssets extends EventDispatcher {
 					ySize: _global.level.alps.lake.map.size[ 1 ],
 					xSegments: 499,
 					ySegments: 499,
-					optimization: THREE.Terrain.None,
+					optimization: Terrain.None,
 				};
 				// debugger
-				// THREE.Terrain.Gaussian(obj.geometry.vertices, o, 1, 11);
-				// THREE.Terrain.Normalize(obj, o);
+				// Terrain.Gaussian(obj.geometry.vertices, o, 1, 11);
+				// Terrain.Normalize(obj, o);
 
 				_this.scene.add( obj );
 
@@ -277,25 +278,12 @@ class ImportAssets extends EventDispatcher {
 
 								t2.wrapS = t2.wrapT = RepeatWrapping;
 								t2.repeat.x = t2.repeat.y = 200;
-								blend = THREE.Terrain.generateBlendedMaterial( [ {
-									texture: t1
-								},
-								{
-									texture: t2,
-									levels: [ - 40, - 20, 20, 30 ]
-								},
-								{
-									texture: t3,
-									levels: [ 20, 50, 60, 85 ]
-								},
-								{
-									texture: t4,
-									glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)'
-								},
-								{
-									texture: t3,
-									glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2'
-								}, // between 27 and 45 degrees
+								blend = Terrain.generateBlendedMaterial( [
+									{ texture: t1 },
+									{ texture: t2, levels: [ - 40, - 20, 20, 30 ] },
+									{ texture: t3, levels: [ 20, 50, 60, 85 ] },
+									{ texture: t4, glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)' },
+									{ texture: t3, glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2' }, // between 27 and 45 degrees
 
 								] );
 
@@ -316,10 +304,10 @@ class ImportAssets extends EventDispatcher {
 									ySegments: terrainDepth - 1,
 									maxHeight: terrainMaxHeight,
 									minHeight: terrainMinHeight,
-									easing: THREE.Terrain.Linear,
+									easing: Terrain.Linear,
 									heightmap: heightmapImage,
 									smoothing: 'Gaussian (1.0, 11)',
-									optimization: THREE.Terrain.POLYGONREDUCTION,
+									optimization: Terrain.POLYGONREDUCTION,
 									frequency: 2.5,
 									steps: 1,
 									stretch: true,
@@ -332,11 +320,11 @@ class ImportAssets extends EventDispatcher {
 
 								};
 
-								var level = THREE.Terrain( o );
+								var level = Terrain( o );
 
 								//potential cause of offset in mesh layers
-								THREE.Terrain.Gaussian( level.children[ 0 ].geometry.vertices, o, 1, 11 );
-								THREE.Terrain.Normalize( level.children[ 0 ], o );
+								Gaussian( level.children[ 0 ].geometry.vertices, o, 1, 11 );
+								Terrain.Normalize( level.children[ 0 ], o );
 
 								level.name = "TerrainVisible";
 								scope.scene.add( level );
@@ -379,10 +367,10 @@ class ImportAssets extends EventDispatcher {
 			ySegments: terrainDepth - 1,
 			maxHeight: terrainMaxHeight,
 			minHeight: terrainMinHeight,
-			easing: THREE.Terrain.Linear,
+			easing: Terrain.Linear,
 			heightmap: heightmapImage,
 			smoothing: 'Gaussian (1.0, 11)',
-			optimization: THREE.Terrain.POLYGONREDUCTION,
+			optimization: Terrain.POLYGONREDUCTION,
 			frequency: 2.5,
 			steps: 1,
 			stretch: true,
@@ -399,7 +387,7 @@ class ImportAssets extends EventDispatcher {
 		// terrainSetup(params, scene).then(function (output) {
 
 		// scene.add(output.terrain);
-		var heightData = THREE.Terrain.toArray1D( scope.terrainObj.children[ 0 ].geometry.vertices );
+		var heightData = Terrain.toArray1D( scope.terrainObj.children[ 0 ].geometry.vertices );
 		// disposeObjMemory(output.terrain);
 
 		var data = {
@@ -436,7 +424,7 @@ class ImportAssets extends EventDispatcher {
 	_organiseObjects( obj, name ) {
 
 		const scope = this;
-		if ( obj.type === "Group" || obj.type === "Scene" ) {
+		if ( obj.type === "Group" || obj.type === "Group" || obj.type === "Scene" ) {
 
 			obj.name = name;
 
@@ -494,8 +482,8 @@ class ImportAssets extends EventDispatcher {
 
 	_applyObjectSetups( obj ) {
 
-		obj.geometry = new BufferGeometry().fromGeometry( obj.geometry );
-		obj.geometry.setDrawRange( 0, obj.geometry.attributes.position.count );
+		// obj.geometry = new BufferGeometry().fromGeometry( obj.geometry );
+		// obj.geometry.setDrawRange( 0, obj.geometry.attributes.position.count );
 		obj.material.fog = this.settings.fogEffectOnCar;
 		obj.material.needsUpdate = false;
 		obj.castShadow = false;

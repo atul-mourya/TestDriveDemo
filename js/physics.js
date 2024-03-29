@@ -1,3 +1,15 @@
+import {
+	Quaternion,
+	MeshPhongMaterial,
+	Clock,
+	Vector3,
+	Object3D,
+	BoxGeometry,
+	CylinderGeometry,
+	Mesh,
+	PlaneBufferGeometry
+} from 'three';
+
 var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhysicsReady ) {
 
 	window.wheels = wheels;
@@ -6,16 +18,16 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		var DISABLE_DEACTIVATION = 4;
 		var TRANSFORM_AUX = new Ammo.btTransform();
-		var ZERO_QUATERNION = new THREE.Quaternion( 0, 0, 0, 1 );
+		var ZERO_QUATERNION = new Quaternion( 0, 0, 0, 1 );
 
-		var materialDynamic = new THREE.MeshPhongMaterial( {
+		var materialDynamic = new MeshPhongMaterial( {
 			color: 0xfca400
 		} );
-		var materialStatic = new THREE.MeshPhongMaterial( {
+		var materialStatic = new MeshPhongMaterial( {
 			color: 0x999999,
 			opacity: 0.1
 		} );
-		var materialInteractive = new THREE.MeshPhongMaterial( {
+		var materialInteractive = new MeshPhongMaterial( {
 			color: 0x990000
 		} );
 
@@ -26,7 +38,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		var ammoHeightData = null;
 
-		var clock = new THREE.Clock();
+		var clock = new Clock();
 
 		// Physics variables
 		var collisionConfiguration;
@@ -85,8 +97,8 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		_this.cameraMode = 3;
 
-		var temp = new THREE.Vector3();
-		var goal = new THREE.Object3D();
+		var temp = new Vector3();
+		var goal = new Object3D();
 		goal.position.set( 0, 400, - 1000 );
 
 		function updateCamera() {
@@ -94,7 +106,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			switch ( _this.cameraMode ) {
 
 				case 0:
-					var offset = new THREE.Vector3( chassis.position.x, chassis.position.y, chassis.position.z );
+					var offset = new Vector3( chassis.position.x, chassis.position.y, chassis.position.z );
 					camera.position.lerp( offset, 0.2 );
 					camera.lookAt( chassis.position.x, chassis.position.y + 20, chassis.position.z );
 					break;
@@ -198,13 +210,13 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 
 			var material = mass > 0 ? materialDynamic : materialStatic;
-			var shape = new THREE.BoxGeometry( w, l, h, 1, 1, 1 );
+			var shape = new BoxGeometry( w, l, h, 1, 1, 1 );
 			var geometry = new Ammo.btBoxShape( new Ammo.btVector3( w * 0.5, l * 0.5, h * 0.5 ) );
 
 			if ( ! mass ) mass = 0;
 			if ( ! friction ) friction = 1;
 
-			var mesh = new THREE.Mesh( shape, material );
+			var mesh = new Mesh( shape, material );
 			mesh.position.copy( pos );
 			mesh.quaternion.copy( quat );
 			mesh.name = "fake ground1";
@@ -271,9 +283,9 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		function createDummyWheelMesh( radius, width, index ) {
 
-			var t = new THREE.CylinderGeometry( radius, radius, width, 24, 1 );
+			var t = new CylinderGeometry( radius, radius, width, 24, 1 );
 			t.rotateZ( Math.PI / 2 );
-			var mesh = new THREE.Mesh( t, materialInteractive );
+			var mesh = new Mesh( t, materialInteractive );
 			mesh.name = "Fake Wheel_" + index;
 			// scene.add(mesh);
 			return mesh;
@@ -292,8 +304,8 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		function createDummyChassisMesh( length, width, height ) {
 
-			var t = new THREE.BoxGeometry( width, height, length );
-			var mesh = new THREE.Mesh( t, materialInteractive );
+			var t = new BoxGeometry( width, height, length );
+			var mesh = new Mesh( t, materialInteractive );
 			mesh.name = "Fake Chassis";
 			scene.add( mesh );
 			chassis = mesh;
@@ -498,7 +510,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 		function createObjects() {
 
 			// createPlane(new THREE.Vector3(0, -5, 0), ZERO_QUATERNION, 1000, 0.01, 1000, 0, 2);
-			createVehicle( new THREE.Vector3( 0, 0, 0 ), ZERO_QUATERNION, chassis, wheels );
+			createVehicle( new Vector3( 0, 0, 0 ), ZERO_QUATERNION, chassis, wheels );
 			_this.isReady = true;
 
 		}
@@ -572,7 +584,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		function initTerrain( heightData ) {
 
-			var geometry = new THREE.PlaneBufferGeometry( terrainWidth, terrainWidth, terrainWidth - 1, terrainWidth - 1 );
+			var geometry = new PlaneBufferGeometry( terrainWidth, terrainWidth, terrainWidth - 1, terrainWidth - 1 );
 			geometry.rotateX( - Math.PI / 2 );
 
 			for ( var i = 0; i < geometry.attributes.position.count; i ++ ) {
