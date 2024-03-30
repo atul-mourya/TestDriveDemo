@@ -4,7 +4,7 @@ import {
 	TextureLoader,
 	RepeatWrapping,
 	Mesh,
-	PlaneBufferGeometry,
+	PlaneGeometry,
 	MeshLambertMaterial
 } from "three";
 import Terrain from './vendors/terrain/THREE.Terrain';
@@ -123,9 +123,6 @@ class ImportAssets extends EventDispatcher {
 		await new Promise( ( resolve ) => {
 
 			var loader = new ObjectLoader( loadManager );
-			loader.setCrossOrigin( "anonymous" );
-			loader.setTexturePath( modelPath + "textures/" );
-			// loader.setModelPath(modelPath);
 			loader.load( model.url, function ( base ) {
 
 				scope._organiseObjects( base, "Car" );
@@ -144,59 +141,6 @@ class ImportAssets extends EventDispatcher {
 		const data = await fetch( baseUrl + json.events.url );
 		this.level = await data.json();
 		return;
-
-	}
-
-	_loadEnvironment() {
-
-		new THREE.TextureLoader().load( './images/sky1.jpg', function ( t1 ) {
-
-			t1.minFilter = THREE.LinearFilter; // Texture is not a power-of-two size; use smoother interpolation.
-			skyDome = new THREE.Mesh(
-				new THREE.SphereGeometry( 8192, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5 ),
-				new THREE.MeshBasicMaterial( {
-					map: t1,
-					side: THREE.BackSide,
-					fog: false
-				} )
-			);
-			skyDome.position.y = - _global.level.alps.lake.map.seaLevel;
-			skyDome.scale.set( 0.5, 0.5, 0.5 );
-			skyDome.name = "Sky Dome";
-			scene.add( skyDome );
-
-		} );
-
-		// water = new THREE.Mesh(
-		//     new THREE.PlaneBufferGeometry(16384 + 1024, 16384 + 1024, 16, 16),
-		//     new THREE.MeshBasicMaterial({
-		//         color: 0x006ba0,
-		//         transparent: true,
-		//         opacity: 0.6
-		//     })
-		// );
-		water = new THREE.Water( new THREE.PlaneBufferGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
-			color: new THREE.Color( 0xffffff ),
-			scale: 100,
-			flowDirection: new THREE.Vector2( 0, 0 ),
-			normalMap0: new THREE.TextureLoader().load( './images/Water_1_M_Normal.jpg' ),
-			normalMap1: new THREE.TextureLoader().load( './images/Water_2_M_Normal.jpg' ),
-			textureWidth: 1024,
-			textureHeight: 1024
-		} );
-		water.position.y = _global.level.alps.lake.map.seaLevel;
-		water.rotation.x = - 0.5 * Math.PI;
-		water.name = 'Water';
-		scene.add( water );
-
-		skyLight = new THREE.DirectionalLight( 0xe8bdb0, 1.5 );
-		skyLight.position.set( 2950, 2625, - 160 );
-		skyLight.name = "Sun Light";
-
-		scene.add( skyLight );
-
-		var light = new THREE.AmbientLight( 0x888888 );
-		scene.add( light );
 
 	}
 
@@ -257,7 +201,7 @@ class ImportAssets extends EventDispatcher {
 
 				t1.wrapS = t1.wrapT = RepeatWrapping;
 				sand = new Mesh(
-					new PlaneBufferGeometry( 16384 + 1024, 16384 + 1024, 1, 1 ),
+					new PlaneGeometry( 16384 + 1024, 16384 + 1024, 1, 1 ),
 					new MeshLambertMaterial( {
 						map: t1
 					} )
@@ -323,7 +267,7 @@ class ImportAssets extends EventDispatcher {
 								var level = Terrain( o );
 
 								//potential cause of offset in mesh layers
-								Gaussian( level.children[ 0 ].geometry.vertices, o, 1, 11 );
+								Gaussian( level.children[ 0 ].geometry, o, 1, 11 );
 								Terrain.Normalize( level.children[ 0 ], o );
 
 								level.name = "TerrainVisible";
@@ -387,7 +331,7 @@ class ImportAssets extends EventDispatcher {
 		// terrainSetup(params, scene).then(function (output) {
 
 		// scene.add(output.terrain);
-		var heightData = Terrain.toArray1D( scope.terrainObj.children[ 0 ].geometry.vertices );
+		var heightData = Terrain.toArray1D( scope.terrainObj.children[ 0 ].geometry );
 		// disposeObjMemory(output.terrain);
 
 		var data = {

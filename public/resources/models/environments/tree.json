@@ -7,7 +7,7 @@
 	"geometries": [
 		{
 			"uuid": "80DFB32C-60A0-4AEA-9DB7-0BA8F2F12AD3",
-			"type": "PlaneBufferGeometry",
+			"type": "PlaneGeometry",
 			"width": 1,
 			"height": 1,
 			"widthSegments": 1,

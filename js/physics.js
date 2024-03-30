@@ -7,7 +7,7 @@ import {
 	BoxGeometry,
 	CylinderGeometry,
 	Mesh,
-	PlaneBufferGeometry
+	PlaneGeometry
 } from 'three';
 
 var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhysicsReady ) {
@@ -584,7 +584,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		function initTerrain( heightData ) {
 
-			var geometry = new PlaneBufferGeometry( terrainWidth, terrainWidth, terrainWidth - 1, terrainWidth - 1 );
+			var geometry = new PlaneGeometry( terrainWidth, terrainWidth, terrainWidth - 1, terrainWidth - 1 );
 			geometry.rotateX( - Math.PI / 2 );
 
 			for ( var i = 0; i < geometry.attributes.position.count; i ++ ) {

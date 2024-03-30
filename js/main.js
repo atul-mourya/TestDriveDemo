@@ -9,7 +9,7 @@ import {
 	Color,
 	Fog,
 	PerspectiveCamera,
-	PlaneBufferGeometry,
+	PlaneGeometry,
 	LinearFilter,
 	Mesh,
 	SphereGeometry,
@@ -265,7 +265,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		//         opacity: 0.6
 		//     })
 		// );
-		const water = new Water( new PlaneBufferGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
+		const water = new Water( new PlaneGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
 			color: new Color( 0xffffff ),
 			scale: 100,
 			flowDirection: new Vector2( 0, 0 ),

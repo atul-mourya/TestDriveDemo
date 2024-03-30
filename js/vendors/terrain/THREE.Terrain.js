@@ -383,7 +383,7 @@ const Terrain = function ( options ) {
 	// Assign elevation data to the terrain plane from a heightmap or function.
 	if ( options.heightmap instanceof HTMLCanvasElement || options.heightmap instanceof Image ) {
 
-		Terrain.fromHeightmap( mesh.geometry.vertices, options );
+		Terrain.fromHeightmap( mesh.geometry.getAttribute( 'position' ), options );
 
 	} else if ( typeof options.heightmap === 'function' ) {
 
@@ -425,7 +425,7 @@ const Terrain = function ( options ) {
  */
 Terrain.Normalize = function ( mesh, options ) {
 
-	var v = mesh.geometry.vertices;
+	var v = mesh.geometry;
 	if ( options.turbulent ) {
 
 		Terrain.Turbulence( v, options );
@@ -452,7 +452,6 @@ Terrain.Normalize = function ( mesh, options ) {
 	mesh.geometry.verticesNeedUpdate = true;
 	mesh.geometry.normalsNeedUpdate = true;
 	mesh.geometry.computeBoundingSphere();
-	mesh.geometry.computeFaceNormals();
 	mesh.geometry.computeVertexNormals();
 
 };
@@ -531,18 +530,21 @@ Terrain.POLYGONREDUCTION = 3;
  * @return {Number[][]}
  *   A 2D array representing the terrain's heightmap.
  */
-Terrain.toArray2D = function ( vertices, options ) {
+Terrain.toArray2D = function ( g, options ) {
 
 	var tgt = new Array( options.xSegments ),
 		xl = options.xSegments + 1,
 		yl = options.ySegments + 1,
 		i, j;
+
+	var positions = g.attributes.position.array;
+
 	for ( i = 0; i < xl; i ++ ) {
 
 		tgt[ i ] = new Float64Array( options.ySegments );
 		for ( j = 0; j < yl; j ++ ) {
 
-			tgt[ i ][ j ] = vertices[ j * xl + i ].z;
+			tgt[ i ][ j ] = positions[ ( j * xl + i ) * 3 + 2 ];
 
 		}
 
@@ -562,13 +564,17 @@ Terrain.toArray2D = function ( vertices, options ) {
  * @param {Number[][]} src
  *   A 2D array representing a heightmap to apply to the terrain.
  */
-Terrain.fromArray2D = function ( vertices, src ) {
+Terrain.fromArray2D = function ( g, src ) {
 
-	for ( var i = 0, xl = src.length; i < xl; i ++ ) {
+	var xl = src.length;
+	var yl = src[ 0 ].length;
+	var positions = g.attributes.position.array;
 
-		for ( var j = 0, yl = src[ i ].length; j < yl; j ++ ) {
+	for ( var i = 0; i < xl; i ++ ) {
 
-			vertices[ j * xl + i ].z = src[ i ][ j ];
+		for ( var j = 0; j < yl; j ++ ) {
+
+			positions[ ( j * xl + i ) * 3 + 2 ] = src[ i ][ j ];
 
 		}
 
@@ -592,12 +598,14 @@ Terrain.fromArray2D = function ( vertices, src ) {
  * @return {Number[]}
  *   A 1D array representing the terrain's heightmap.
  */
-Terrain.toArray1D = function ( vertices ) {
+Terrain.toArray1D = function ( g ) {
 
-	var tgt = new Float64Array( vertices.length );
-	for ( var i = 0, l = tgt.length; i < l; i ++ ) {
+	var positions = g.attributes.position.array;
+	var l = positions.length / 3;
+	var tgt = new Float64Array( l );
+	for ( var i = 0; i < l; i ++ ) {
 
-		tgt[ i ] = vertices[ i ].z;
+		tgt[ i ] = positions[ i * 3 + 2 ];
 
 	}
 
@@ -746,13 +754,16 @@ Terrain.fromHeightmap = function ( g, options ) {
 	canvas.height = rows;
 	context.drawImage( options.heightmap, 0, 0, canvas.width, canvas.height );
 	var data = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
+
+	const vertex = new THREE.Vector3();
 	for ( var row = 0; row < rows; row ++ ) {
 
 		for ( var col = 0; col < cols; col ++ ) {
 
-			var i = row * cols + col,
-				idx = i * 4;
-			g[ i ].z = ( data[ idx ] + data[ idx + 1 ] + data[ idx + 2 ] ) / 765 * spread + options.minHeight;
+			var i = row * cols + col, idx = i * 4;
+			vertex.fromBufferAttribute( g, i );
+			vertex.z = ( data[ idx ] + data[ idx + 1 ] + data[ idx + 2 ] ) / 765 * spread + options.minHeight;
+			g.setXYZ( i, vertex.x, vertex.y, vertex.z ); // write coordinates back
 
 		}
 
@@ -840,13 +851,14 @@ Terrain.Clamp = function ( g, options ) {
 
 	var min = Infinity,
 		max = - Infinity,
-		l = g.length,
+		l = g.attributes.position.count,
 		i;
 	options.easing = options.easing || Terrain.Linear;
 	for ( i = 0; i < l; i ++ ) {
 
-		if ( g[ i ].z < min ) min = g[ i ].z;
-		if ( g[ i ].z > max ) max = g[ i ].z;
+		var z = g.attributes.position.array[ i * 3 + 2 ];
+		if ( z < min ) min = z;
+		if ( z > max ) max = z;
 
 	}
 
@@ -865,7 +877,7 @@ Terrain.Clamp = function ( g, options ) {
 
 	for ( i = 0; i < l; i ++ ) {
 
-		g[ i ].z = options.easing( ( g[ i ].z - min ) / actualRange ) * range + optMin;
+		g.attributes.position.array[ i * 3 + 2 ] = options.easing( ( g.attributes.position.array[ i * 3 + 2 ] - min ) / actualRange ) * range + optMin;
 
 	}
 
@@ -2242,13 +2254,13 @@ Terrain.generateBlendedMaterial = function ( textures ) {
 
 			THREE.ShaderChunk.lightmap_fragment,
 
-			'    reflectedLight.indirectDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb );',
+			'    reflectedLight.indirectDiffuse *= BRDF_Lambert( diffuseColor.rgb );',
 			'    #ifdef DOUBLE_SIDED',
 			'            reflectedLight.directDiffuse = ( gl_FrontFacing ) ? vLightFront : vLightBack;',
 			'    #else',
 			'            reflectedLight.directDiffuse = vLightFront;',
 			'    #endif',
-			'    reflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();',
+			'    reflectedLight.directDiffuse *= BRDF_Lambert( diffuseColor.rgb ) * getShadowMask();',
 
 			// modulation
 			THREE.ShaderChunk.aomap_fragment,
