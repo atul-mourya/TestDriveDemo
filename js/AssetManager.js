@@ -3,9 +3,8 @@ import {
 	ObjectLoader,
 	TextureLoader,
 	RepeatWrapping,
-	Mesh,
-	PlaneGeometry,
-	MeshLambertMaterial
+	MeshLambertMaterial,
+	MeshStandardMaterial
 } from "three";
 import Terrain from './vendors/terrain/THREE.Terrain';
 import Gaussian from "./vendors/terrain/gaussian";
@@ -59,8 +58,6 @@ class ImportAssets extends EventDispatcher {
 			this.heightData = await this._createHeightField();
 
 			console.log( 'Environment, car and standard parts loaded' );
-			// loaded = true;
-			// _global.loadingManager.onLoad();
 
 			this.carBody.position.x = this.level.alps.lake.car.origin[ 0 ];
 			this.carBody.position.y = this.level.alps.lake.car.origin[ 1 ];
@@ -85,25 +82,6 @@ class ImportAssets extends EventDispatcher {
 			// }
 
 			this.dispatchEvent( { type: 'ready' } );
-			// var initAmmo = true;
-
-			// var onPhysicsReady = function () {
-
-			// 	// _loadLevel().then(function () {
-			// 	_loadEnvironment();
-			// 	onGameReady();
-			// 	// });
-
-			// };
-
-			// if ( initAmmo ) {
-
-			// 	_this.physics = new Physics( _global.envMeshes, _global.carBody, _global.wheels, _this.camera, heightData, onPhysicsReady );
-
-			// }
-
-
-
 
 		}
 
@@ -115,24 +93,11 @@ class ImportAssets extends EventDispatcher {
 		this.envMapComponent = [];
 		this.wheels = [];
 
-		model.url = baseUrl + model.url;
-		var modelPath = model.url.substring( 0, model.url.lastIndexOf( "/" ) + 1 );
+		var loader = new ObjectLoader( loadManager );
+		var base = await loader.loadAsync( baseUrl + model.url );
 
-		const scope = this;
-
-		await new Promise( ( resolve ) => {
-
-			var loader = new ObjectLoader( loadManager );
-			loader.load( model.url, function ( base ) {
-
-				scope._organiseObjects( base, "Car" );
-				scope.baseParts = base;
-				console.debug( "loaded base parts" );
-				resolve();
-
-			} );
-
-		} );
+		this._organiseObjects( base, "Car" );
+		this.baseParts = base;
 
 	}
 
@@ -190,102 +155,91 @@ class ImportAssets extends EventDispatcher {
 	async _loadLevel() {
 
 		const scope = this;
-		await new Promise( ( resolve ) => {
+		await new Promise( async ( resolve ) => {
 
 			var heightmapImage = new Image();
 			heightmapImage.src = baseUrl + this.level.alps.lake.map.heightMap;
 
-			var blend, sand;
+			var sand;
 			var loader = new TextureLoader();
-			loader.load( './images/sand001.jpg', function ( t1 ) {
+			const t1 = await loader.loadAsync( './images/sand001.jpg' );
+			const t2 = await loader.loadAsync( './images/GrassGreenTexture0002.jpg' );
+			const t3 = await loader.loadAsync( './images/rock001.png' );
+			const t4 = await loader.loadAsync( './images/snow1.jpg' );
+			// const t5 = await loader.loadAsync( baseUrl + '/resources/data/events/alps/lake/r_exp.png' );
 
-				t1.wrapS = t1.wrapT = RepeatWrapping;
-				sand = new Mesh(
-					new PlaneGeometry( 16384 + 1024, 16384 + 1024, 1, 1 ),
-					new MeshLambertMaterial( {
-						map: t1
-					} )
-				);
-				sand.position.y = - 50;
-				// sand.position.y = params.seaLevel - 101;
-				sand.rotation.x = - 0.5 * Math.PI;
-				scope.scene.add( sand );
-				loader.load( './images/GrassGreenTexture0002.jpg', function ( t2 ) {
+			t1.wrapS = t1.wrapT = RepeatWrapping;
+			t2.wrapS = t2.wrapT = RepeatWrapping;
+			t3.wrapS = t3.wrapT = RepeatWrapping;
+			// t5.wrapS = t3.wrapT = RepeatWrapping;
 
-					loader.load( './images/rock001.png', function ( t3 ) {
+			t1.repeat.x = t1.repeat.y = 200;
+			t2.repeat.x = t2.repeat.y = 200;
+			t3.repeat.x = t3.repeat.y = 20;
 
-						t3.wrapS = t3.wrapT = RepeatWrapping;
-						t3.repeat.x = t3.repeat.y = 20;
-						loader.load( './images/snow1.jpg', function ( t4 ) {
-
-							loader.load( baseUrl + '/resources/data/events/alps/lake/r_exp.png', function ( t5 ) {
-
-								t2.wrapS = t2.wrapT = RepeatWrapping;
-								t2.repeat.x = t2.repeat.y = 200;
-								blend = Terrain.generateBlendedMaterial( [
-									{ texture: t1 },
-									{ texture: t2, levels: [ - 40, - 20, 20, 30 ] },
-									{ texture: t3, levels: [ 20, 50, 60, 85 ] },
-									{ texture: t4, glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)' },
-									{ texture: t3, glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2' }, // between 27 and 45 degrees
-
-								] );
-
-								var blend2 = new MeshLambertMaterial( {
-									color: 0xffffff,
-									map: new TextureLoader().load( baseUrl + '/resources/data/events/alps/lake/c.jpg' )
-								} );
-
-								var terrainWidth = scope.level.alps.lake.map.size[ 0 ];
-								var terrainDepth = scope.level.alps.lake.map.size[ 1 ];
-								var terrainMaxHeight = scope.level.alps.lake.map.heightRange[ 0 ];
-								var terrainMinHeight = scope.level.alps.lake.map.heightRange[ 1 ];
-
-								var o = {
-									xSize: terrainWidth,
-									ySize: terrainDepth,
-									xSegments: terrainWidth - 1,
-									ySegments: terrainDepth - 1,
-									maxHeight: terrainMaxHeight,
-									minHeight: terrainMinHeight,
-									easing: Terrain.Linear,
-									heightmap: heightmapImage,
-									smoothing: 'Gaussian (1.0, 11)',
-									optimization: Terrain.POLYGONREDUCTION,
-									frequency: 2.5,
-									steps: 1,
-									stretch: true,
-									turbulent: false,
-									useBufferGeometry: false,
-									material: blend,
-
-									//trees spread
-									seaLevel: scope.level.alps.lake.map.seaLevel
-
-								};
-
-								var level = Terrain( o );
-
-								//potential cause of offset in mesh layers
-								Gaussian( level.children[ 0 ].geometry, o, 1, 11 );
-								Terrain.Normalize( level.children[ 0 ], o );
-
-								level.name = "TerrainVisible";
-								scope.scene.add( level );
-								scope.terrainObj = level;
-								console.debug( "loaded base parts" );
-
-								resolve();
-
-							} );
-
-						} );
-
-					} );
-
-				} );
-
+			let terrainMaterial = new MeshStandardMaterial( {
+				roughness: 1,
+				metalness: 0,
+				envMapIntensity: 0
 			} );
+			const seaLevel = this.level.alps.lake.map.seaLevel;
+			terrainMaterial = Terrain.generateBlendedMaterial( [
+				{ texture: t1 },
+				{ texture: t2, levels: [ seaLevel, seaLevel + 2, 20, 40 ] },
+				{ texture: t3, glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2' }, // between 27 and 45 degrees
+				{ texture: t4, glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)' },
+
+			], terrainMaterial );
+
+			var terrainMaterial2 = new MeshLambertMaterial( {
+				color: 0xffffff,
+				map: new TextureLoader().load( baseUrl + '/resources/data/events/alps/lake/c.jpg' )
+			} );
+
+			var terrainWidth = scope.level.alps.lake.map.size[ 0 ];
+			var terrainDepth = scope.level.alps.lake.map.size[ 1 ];
+			var terrainMaxHeight = scope.level.alps.lake.map.heightRange[ 0 ];
+			var terrainMinHeight = scope.level.alps.lake.map.heightRange[ 1 ];
+
+			var o = {
+				xSize: terrainWidth,
+				ySize: terrainDepth,
+				xSegments: terrainWidth - 1,
+				ySegments: terrainDepth - 1,
+				maxHeight: terrainMaxHeight,
+				minHeight: terrainMinHeight,
+				easing: Terrain.Linear,
+				heightmap: heightmapImage,
+				smoothing: 'Gaussian (1.0, 11)',
+				optimization: Terrain.POLYGONREDUCTION,
+				frequency: 2.5,
+				steps: 1,
+				stretch: true,
+				turbulent: false,
+				useBufferGeometry: false,
+				material: terrainMaterial,
+
+				//trees spread
+				seaLevel: scope.level.alps.lake.map.seaLevel
+
+			};
+
+			var level = Terrain( o );
+
+			//potential cause of offset in mesh layers
+			Gaussian( level.children[ 0 ].geometry, o, 1, 11 );
+			Terrain.Normalize( level.children[ 0 ], o );
+
+			level.name = "TerrainVisible";
+			scope.scene.add( level );
+			scope.terrainObj = level;
+
+			resolve();
+
+
+
+
+
 
 		} );
 
@@ -426,20 +380,17 @@ class ImportAssets extends EventDispatcher {
 
 	_applyObjectSetups( obj ) {
 
-		// obj.geometry = new BufferGeometry().fromGeometry( obj.geometry );
-		// obj.geometry.setDrawRange( 0, obj.geometry.attributes.position.count );
-		obj.material.fog = this.settings.fogEffectOnCar;
-		obj.material.needsUpdate = false;
 		obj.castShadow = false;
 		obj.receiveShadow = false;
 		if ( obj.name == "body" ) {
 
+			obj.material.envMap = this.scene.environment;
 			this.storedMaterial.body = obj.material;
 			this.carBody = obj;
 
 		}
 
-		this._fetchEnvMapComponent( obj );
+		// this._fetchEnvMapComponent( obj );
 
 	}
 
@@ -449,7 +400,6 @@ class ImportAssets extends EventDispatcher {
 
 			this.envMapComponent.push( obj );
 			obj.material.envMap.dispose();
-			obj.material.envMap = _global.reflectionCube;
 			obj.material.needsUpdate = true;
 
 		}
