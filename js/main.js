@@ -7,20 +7,14 @@ import {
 	Cache,
 	Scene,
 	Color,
-	Fog,
 	PerspectiveCamera,
 	PlaneGeometry,
-	LinearFilter,
-	Mesh,
-	SphereGeometry,
-	MeshBasicMaterial,
 	Vector2,
-	DirectionalLight,
-	AmbientLight,
-	BackSide
+	EquirectangularReflectionMapping
 } from 'three';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
-// import Terrain from './vendors/terrain/THREE.Terrain';
+import Stats from 'three/examples/jsm/libs/stats.module';
 // import { Reflector } from 'three/examples/jsm/objects/Reflector';
 // import { Refractor } from 'three/examples/jsm/objects/Refractor';
 function isElement( obj ) {
@@ -132,36 +126,26 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	};
 
-	function _setup() {
+	async function _setup() {
 
 		var scriptLoader = new ScriptLoader();
-		return new Promise( function ( resolve, reject ) {
 
-			scriptLoader.load( data.cdn, scripts ).then( function () {
+		await scriptLoader.load( data.cdn, scripts );
 
-				console.log( 'scripts are loaded' );
-				_global.client = new ClientJS();
-				_global.clock = new Clock();
-				resolve();
-
-			} ).catch( e => {
-
-				console.log( "Error", e );
-
-			} );
-
-		} );
+		console.log( 'scripts are loaded' );
+		_global.client = new ClientJS();
+		_global.clock = new Clock();
 
 	}
 
 	function _init() {
 
 		Cache.enabled = true;
+
 		_initScene();
 		_initRenderer();
 		_initCamera();
 		// _initControls();
-		// _importAssets();
 		_initAssetManager();
 
 		_registerEventListeners();
@@ -172,8 +156,10 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 		_this.scene = new Scene();
 		_this.scene.name = "Scene";
-		_this.scene.background = new Color( 0xffffff );
-		_this.scene.fog = new Fog( 0, 0.1, 0 );
+		_this.scene.environment = new RGBELoader().load( './images/cannon_2k.hdr' );
+		_this.scene.environment.mapping = EquirectangularReflectionMapping;
+		_this.scene.background = _this.scene.environment;
+		// _this.scene.fog = new Fog( 0, 0.1, 0 );
 		_animateFrame();
 
 		if ( tracker.exportScene == true ) window.scene = _this.scene;
@@ -230,41 +216,13 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	var onPhysicsReady = function () {
 
-		// _loadLevel().then(function () {
 		_loadEnvironment();
 		onGameReady();
-		// });
 
 	};
 
 	function _loadEnvironment() {
 
-		new TextureLoader().load( './images/sky1.jpg', function ( t1 ) {
-
-			t1.minFilter = LinearFilter; // Texture is not a power-of-two size; use smoother interpolation.
-			const skyDome = new Mesh(
-				new SphereGeometry( 8192, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5 ),
-				new MeshBasicMaterial( {
-					map: t1,
-					side: BackSide,
-					fog: false
-				} )
-			);
-			skyDome.position.y = - _global.level.alps.lake.map.seaLevel;
-			skyDome.scale.set( 0.5, 0.5, 0.5 );
-			skyDome.name = "Sky Dome";
-			_this.scene.add( skyDome );
-
-		} );
-
-		// water = new THREE.Mesh(
-		//     new THREE.PlaneBufferGeometry(16384 + 1024, 16384 + 1024, 16, 16),
-		//     new THREE.MeshBasicMaterial({
-		//         color: 0x006ba0,
-		//         transparent: true,
-		//         opacity: 0.6
-		//     })
-		// );
 		const water = new Water( new PlaneGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
 			color: new Color( 0xffffff ),
 			scale: 100,
@@ -278,15 +236,6 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		water.rotation.x = - 0.5 * Math.PI;
 		water.name = 'Water';
 		_this.scene.add( water );
-
-		const skyLight = new DirectionalLight( 0xe8bdb0, 1.5 );
-		skyLight.position.set( 2950, 2625, - 160 );
-		skyLight.name = "Sun Light";
-
-		_this.scene.add( skyLight );
-
-		var light = new AmbientLight( 0x888888 );
-		_this.scene.add( light );
 
 	}
 
@@ -482,30 +431,10 @@ const TestDrive = function ( data, loadingManager, onGameReady ) {
 
 	var scripts = [
 		[
-			// "/js/vendors/threejs/r90/three.js",
 			"/js/vendors/ammo/ammo.js",
 		],
 		[
-			// "/js/vendors/terrain/THREE.Terrain.js",
-			// "/js/vendors/threejs/r90/js/libs/Reflector.js",
-			// "/js/vendors/threejs/r90/js/libs/Refractor.js",
-			// "/js/vendors/threejs/r90/js/libs/Water2.js",
-		],
-		[
-			// "/js/vendors/terrain/weightedBoxBlurGaussian.js",
-			// "/js/vendors/terrain/gaussian.js",
-			// "/js/vendors/terrain/brownian.js",
-			// "/js/vendors/terrain/worley.js",
-		],
-		// [
-
-		// 	"/js/terrain2.js",
-
-		// ],
-		[
-			// "/js/physics.js",
 			"/js/vendors/threex/threex.rendererstats.js",
-			"/js/vendors/threejs/r90/js/libs/stats.min.js",
 			"/js/vendors/clientjs/client.min.js",
 
 		],
