@@ -10,7 +10,8 @@ import {
 	PerspectiveCamera,
 	PlaneGeometry,
 	Vector2,
-	EquirectangularReflectionMapping
+	EquirectangularReflectionMapping,
+	DirectionalLight
 } from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
@@ -159,6 +160,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		_this.scene.environment = new RGBELoader().load( './images/cannon_2k.hdr' );
 		_this.scene.environment.mapping = EquirectangularReflectionMapping;
 		_this.scene.background = _this.scene.environment;
+		_this.scene.environmentIntensity = 0.2;
 		// _this.scene.fog = new Fog( 0, 0.1, 0 );
 		_animateFrame();
 
@@ -236,6 +238,10 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		water.rotation.x = - 0.5 * Math.PI;
 		water.name = 'Water';
 		_this.scene.add( water );
+
+		const directionalLight = new DirectionalLight( 0xffffff, 2 );
+		directionalLight.position.set( 1, 1, 1 ).normalize(); // set the direction
+		scene.add( directionalLight );
 
 	}
 
@@ -438,9 +444,9 @@ const TestDrive = function ( data, loadingManager, onGameReady ) {
 			"/js/vendors/clientjs/client.min.js",
 
 		],
-		[
-			"/js/PostProcessor.js"
-		]
+		// [
+		// 	"/js/PostProcessor.js"
+		// ]
 	];
 	AbstractTestDrive.call( this, data, loadingManager, scripts, onGameReady );
 
