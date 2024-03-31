@@ -100,37 +100,32 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 		var temp = new Vector3();
 		var goal = new Object3D();
 		goal.position.set( 0, 400, - 1000 );
+		var rotationQuaternion = new Quaternion();
 
 		function updateCamera() {
 
 			switch ( _this.cameraMode ) {
 
 				case 0:
-					var offset = new Vector3( chassis.position.x, chassis.position.y, chassis.position.z );
-					camera.position.lerp( offset, 0.2 );
-					camera.lookAt( chassis.position.x, chassis.position.y + 20, chassis.position.z );
+					temp.copy( chassis.position );
+					camera.position.lerp( temp, 0.2 );
+					camera.lookAt( chassis.position.x, chassis.position.y, chassis.position.z - 20 );
 					break;
 				case 1:
-				// camera.useQuaternion = true;
-					camera.updateMatrix();
-					camera.position.x = chassis.position.x + 0.75 + camera.matrix.elements[ 1 ] * 0.7;
-					camera.position.y = chassis.position.y + 1.25 + camera.matrix.elements[ 5 ] * 0.7;
-					camera.position.z = chassis.position.z + 0.75 + camera.matrix.elements[ 9 ] * 0.7;
-					chassis.worldToLocal( temp );
-					temp.x -= 10;
-					camera.lookAt( temp );
-					// camera.matrix.setPosition(chassis.position);
-					// camera.quaternion.copy(chassis.quaternion);
-					// camera.quaternion.y = -camera.quaternion.y
+
+					camera.quaternion.copy( chassis.quaternion );
+					rotationQuaternion.setFromAxisAngle( temp.set( 0, 1, 0 ), Math.PI );
+					camera.quaternion.multiply( rotationQuaternion );
+					camera.position.copy( chassis.position ).add( temp.set( - 0.7, 2, 1 ) );
 
 					break;
 				case 2:
 					camera.position.set( chassis.position.x + 20, chassis.position.y + 6, chassis.position.z );
-					camera.lookAt( chassis.position.x, chassis.position.y, chassis.position.z );
+					camera.lookAt( chassis.position );
 					break;
 				case 3:
 					temp.setFromMatrixPosition( goal.matrixWorld );
-					camera.position.lerp( temp, 0.3 );
+					camera.position.lerp( temp, 0.1 );
 					camera.lookAt( chassis.position );
 					break;
 
@@ -163,10 +158,14 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			if ( ! _this.needsReset ) {
 
 				var dt = clock.getDelta();
-				updateCamera( dt );
-				for ( var i = 0; i < syncList.length; i ++ )
+				for ( var i = 0; i < syncList.length; i ++ ) {
+
 					syncList[ i ]( dt );
+
+				}
+
 				physicsWorld.stepSimulation( dt, 1 );
+				updateCamera( dt );
 				time += dt;
 
 			} else {
