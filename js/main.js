@@ -228,7 +228,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		const water = new Water( new PlaneGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
 			color: new Color( 0xffffff ),
 			scale: 100,
-			flowDirection: new Vector2( 0, 0 ),
+			flowDirection: new Vector2( 0.75, 0.75 ),
 			normalMap0: new TextureLoader().load( './images/Water_1_M_Normal.jpg' ),
 			normalMap1: new TextureLoader().load( './images/Water_2_M_Normal.jpg' ),
 			textureWidth: 1024,
