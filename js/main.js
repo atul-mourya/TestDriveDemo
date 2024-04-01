@@ -10,8 +10,8 @@ import {
 	PerspectiveCamera,
 	PlaneGeometry,
 	Vector2,
-	EquirectangularReflectionMapping,
-	DirectionalLight
+	DirectionalLight,
+	PMREMGenerator,
 } from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
@@ -157,11 +157,6 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 		_this.scene = new Scene();
 		_this.scene.name = "Scene";
-		_this.scene.environment = new RGBELoader().load( './images/cannon_2k.hdr' );
-		_this.scene.environment.mapping = EquirectangularReflectionMapping;
-		_this.scene.background = _this.scene.environment;
-		_this.scene.environmentIntensity = 0.2;
-		// _this.scene.fog = new Fog( 0, 0.1, 0 );
 		_animateFrame();
 
 		if ( tracker.exportScene == true ) window.scene = _this.scene;
@@ -223,7 +218,19 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	};
 
-	function _loadEnvironment() {
+	async function _loadEnvironment() {
+
+		const pmremGenerator = new PMREMGenerator( _global.renderer );
+		pmremGenerator.compileEquirectangularShader();
+		var rgbe_loader = new RGBELoader();
+		const texture = await rgbe_loader.loadAsync( "/images/cannon_2k.hdr" );
+		const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
+		_this.scene.environment = envMap;
+		texture.dispose();
+		pmremGenerator.dispose();
+
+		_this.scene.background = _this.scene.environment;
+		_this.scene.environmentIntensity = 0.2;
 
 		const water = new Water( new PlaneGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
 			color: new Color( 0xffffff ),
@@ -239,7 +246,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		water.name = 'Water';
 		_this.scene.add( water );
 
-		const directionalLight = new DirectionalLight( 0xffffff, 2 );
+		const directionalLight = new DirectionalLight( 0xffffff, 5 );
 		directionalLight.position.set( 1, 1, 1 ).normalize(); // set the direction
 		scene.add( directionalLight );
 

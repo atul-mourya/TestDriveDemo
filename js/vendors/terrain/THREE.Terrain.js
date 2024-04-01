@@ -2257,14 +2257,7 @@ Terrain.ScatterMeshes = function ( geometry, options ) {
 
 	if ( ! options.mesh ) {
 
-		console.error( 'options.mesh is required for Terrain.ScatterMeshes but was not passed' );
-		return;
-
-	}
-
-	if ( geometry instanceof THREE.BufferGeometry ) {
-
-		console.warn( 'The terrain mesh is using BufferGeometry but Terrain.ScatterMeshes can only work with Geometry.' );
+		console.error( 'options.mesh is required for THREE.Terrain.ScatterMeshes but was not passed' );
 		return;
 
 	}
@@ -2300,8 +2293,10 @@ Terrain.ScatterMeshes = function ( geometry, options ) {
 		randomness,
 		spreadRange = 1 / options.smoothSpread,
 		doubleSizeVariance = options.sizeVariance * 2,
-		v = geometry.vertices,
-		meshes = [],
+		vertex1 = new THREE.Vector3(),
+		vertex2 = new THREE.Vector3(),
+		vertex3 = new THREE.Vector3(),
+		faceNormal = new THREE.Vector3(),
 		up = options.mesh.up.clone().applyAxisAngle( new THREE.Vector3( 1, 0, 0 ), 0.5 * Math.PI );
 	if ( spreadIsNumber ) {
 
@@ -2314,110 +2309,77 @@ Terrain.ScatterMeshes = function ( geometry, options ) {
 
 	}
 
-	// geometry.computeFaceNormals();
-	for ( var i = 0, w = options.w * 2; i < w; i ++ ) {
+	geometry = geometry.toNonIndexed();
+	var gArray = geometry.attributes.position.array;
+	for ( var i = 0; i < geometry.attributes.position.array.length; i += 9 ) {
 
-		for ( var j = 0, h = options.h; j < h; j ++ ) {
+		vertex1.set( gArray[ i + 0 ], gArray[ i + 1 ], gArray[ i + 2 ] );
+		vertex2.set( gArray[ i + 3 ], gArray[ i + 4 ], gArray[ i + 5 ] );
+		vertex3.set( gArray[ i + 6 ], gArray[ i + 7 ], gArray[ i + 8 ] );
+		THREE.Triangle.getNormal( vertex1, vertex2, vertex3, faceNormal );
 
-			var key = j * w + i,
-				f = geometry.faces[ key ],
-				place = false;
-			if ( spreadIsNumber ) {
+		var place = false;
+		if ( spreadIsNumber ) {
 
-				var rv = randomness( key );
-				if ( rv < options.spread ) {
+			var rv = randomness( i / 9 );
+			if ( rv < options.spread ) {
 
-					place = true;
+				place = true;
 
-				} else if ( rv < options.spread + options.smoothSpread ) {
+			} else if ( rv < options.spread + options.smoothSpread ) {
 
-					// Interpolate rv between spread and spread + smoothSpread,
-					// then multiply that "easing" value by the probability
-					// that a mesh would get placed on a given face.
-					place = Terrain.EaseInOut( ( rv - options.spread ) * spreadRange ) * options.spread > Math.random();
-
-				}
-
-			} else {
-
-				place = options.spread( v[ f.a ], key, f, i, j );
+				// Interpolate rv between spread and spread + smoothSpread,
+				// then multiply that "easing" value by the probability
+				// that a mesh would get placed on a given face.
+				place = THREE.Terrain.EaseInOut( ( rv - options.spread ) * spreadRange ) * options.spread > Math.random();
 
 			}
 
-			if ( place ) {
+		} else {
 
-				// Don't place a mesh if the angle is too steep.
-				if ( f.normal.angleTo( up ) > options.maxSlope ) {
+			place = options.spread( vertex1, i / 9, faceNormal, i );
 
-					continue;
+		}
 
-				}
+		if ( place ) {
 
-				var mesh = options.mesh.clone();
-				// mesh.geometry.computeBoundingBox();
-				mesh.position.copy( v[ f.a ] ).add( v[ f.b ] ).add( v[ f.c ] ).divideScalar( 3 );
-				// mesh.translateZ((mesh.geometry.boundingBox.max.z - mesh.geometry.boundingBox.min.z) * 0.5);
-				if ( options.maxTilt > 0 ) {
+			// Don't place a mesh if the angle is too steep.
+			if ( faceNormal.angleTo( up ) > options.maxSlope ) {
 
-					var normal = mesh.position.clone().add( f.normal );
-					mesh.lookAt( normal );
-					var tiltAngle = f.normal.angleTo( up );
-					if ( tiltAngle > options.maxTilt ) {
-
-						var ratio = options.maxTilt / tiltAngle;
-						mesh.rotation.x *= ratio;
-						mesh.rotation.y *= ratio;
-						mesh.rotation.z *= ratio;
-
-					}
-
-				}
-
-				mesh.rotation.x += 90 / 180 * Math.PI;
-				mesh.rotateY( Math.random() * 2 * Math.PI );
-				if ( options.sizeVariance ) {
-
-					var variance = Math.random() * doubleSizeVariance - options.sizeVariance;
-					mesh.scale.x = mesh.scale.z = 1 + variance;
-					mesh.scale.y += variance;
-
-				}
-
-				meshes.push( mesh );
+				continue;
 
 			}
 
-		}
+			var mesh = options.mesh.clone();
+			mesh.position.addVectors( vertex1, vertex2 ).add( vertex3 ).divideScalar( 3 );
+			if ( options.maxTilt > 0 ) {
 
-	}
+				var normal = mesh.position.clone().add( faceNormal );
+				mesh.lookAt( normal );
+				var tiltAngle = faceNormal.angleTo( up );
+				if ( tiltAngle > options.maxTilt ) {
 
-	// Merge geometries.
-	var k, l;
-	if ( options.mesh.geometry instanceof THREE.Geometry ) {
+					var ratio = options.maxTilt / tiltAngle;
+					mesh.rotation.x *= ratio;
+					mesh.rotation.y *= ratio;
+					mesh.rotation.z *= ratio;
 
-		var g = new THREE.Geometry();
-		for ( k = 0, l = meshes.length; k < l; k ++ ) {
+				}
 
-			var m = meshes[ k ];
-			m.updateMatrix();
-			g.merge( m.geometry, m.matrix );
+			}
 
-		}
+			mesh.rotation.x += 90 / 180 * Math.PI;
+			mesh.rotateY( Math.random() * 2 * Math.PI );
+			if ( options.sizeVariance ) {
 
-		/*
-        if (!(options.mesh.material instanceof THREE.MeshFaceMaterial)) {
-            g = THREE.BufferGeometryUtils.fromGeometry(g);
-        }
-        */
-		options.scene.add( new THREE.Mesh( g, options.mesh.material ) );
+				var variance = Math.random() * doubleSizeVariance - options.sizeVariance;
+				mesh.scale.x = mesh.scale.z = 1 + variance;
+				mesh.scale.y += variance;
 
-	}
-	// There's no BufferGeometry merge method implemented yet.
-	else {
+			}
 
-		for ( k = 0, l = meshes.length; k < l; k ++ ) {
-
-			options.scene.add( meshes[ k ] );
+			mesh.updateMatrix();
+			options.scene.add( mesh );
 
 		}
 

@@ -6,6 +6,7 @@ import {
 	MeshLambertMaterial,
 	MeshStandardMaterial
 } from "three";
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/THREE.Terrain';
 import Gaussian from "./vendors/terrain/gaussian";
 
@@ -234,14 +235,31 @@ class ImportAssets extends EventDispatcher {
 			scope.scene.add( level );
 			scope.terrainObj = level;
 
+			// Get the geometry of the terrain across which you want to scatter meshes
+			var geo = level.children[ 0 ].geometry;
+			let tree = await this.buildTree();
+			// Add randomly distributed foliage
+			var trees = Terrain.ScatterMeshes( geo, {
+				mesh: tree,
+				w: terrainWidth - 1,
+				h: terrainDepth - 1,
+				spread: 0.001,
+				randomness: Math.random,
+			} );
+			level.add( trees );
+
 			resolve();
 
-
-
-
-
-
 		} );
+
+	}
+
+	async buildTree() {
+
+		const loader = new GLTFLoader();
+		const data = await loader.loadAsync( './resources/models/Folliage/tree1.glb' );
+
+		return data.scenes[ 0 ].children[ 0 ];
 
 	}
 
