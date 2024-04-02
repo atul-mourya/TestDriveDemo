@@ -167,7 +167,7 @@ class ImportAssets extends EventDispatcher {
 			const t2 = await loader.loadAsync( './images/GrassGreenTexture0002.jpg' );
 			const t3 = await loader.loadAsync( './images/rock001.png' );
 			const t4 = await loader.loadAsync( './images/snow1.jpg' );
-			// const t5 = await loader.loadAsync( baseUrl + '/resources/data/events/alps/lake/r_exp.png' );
+			const t5 = await loader.loadAsync( baseUrl + '/resources/data/events/alps/lake/r_exp4.png' );
 
 			t1.wrapS = t1.wrapT = RepeatWrapping;
 			t2.wrapS = t2.wrapT = RepeatWrapping;
@@ -181,7 +181,8 @@ class ImportAssets extends EventDispatcher {
 			let terrainMaterial = new MeshStandardMaterial( {
 				roughness: 1,
 				metalness: 0,
-				envMapIntensity: 0
+				envMapIntensity: 0,
+				toneMapped: false,
 			} );
 			const seaLevel = this.level.alps.lake.map.seaLevel;
 			terrainMaterial = Terrain.generateBlendedMaterial( [
@@ -189,6 +190,7 @@ class ImportAssets extends EventDispatcher {
 				{ texture: t2, levels: [ seaLevel, seaLevel + 2, 20, 40 ] },
 				{ texture: t3, glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2' }, // between 27 and 45 degrees
 				{ texture: t4, glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)' },
+				// { texture: t5, glsl: '1.0' },
 
 			], terrainMaterial );
 

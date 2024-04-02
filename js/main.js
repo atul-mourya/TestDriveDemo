@@ -12,6 +12,8 @@ import {
 	Vector2,
 	DirectionalLight,
 	PMREMGenerator,
+	ACESFilmicToneMapping,
+	SRGBColorSpace,
 } from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
@@ -230,7 +232,11 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		pmremGenerator.dispose();
 
 		_this.scene.background = _this.scene.environment;
-		_this.scene.environmentIntensity = 0.2;
+		_this.scene.environmentIntensity = 1;
+
+		_global.renderer.outputSpace = SRGBColorSpace,
+		_global.renderer.toneMapping = ACESFilmicToneMapping;
+		_global.renderer.toneMappingExposure = 0.85;
 
 		const water = new Water( new PlaneGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
 			color: new Color( 0xffffff ),
@@ -246,7 +252,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		water.name = 'Water';
 		_this.scene.add( water );
 
-		const directionalLight = new DirectionalLight( 0xffffff, 5 );
+		const directionalLight = new DirectionalLight( 0xffffff, 2 );
 		directionalLight.position.set( 1, 1, 1 ).normalize(); // set the direction
 		scene.add( directionalLight );
 
