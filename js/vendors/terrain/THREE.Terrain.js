@@ -2154,12 +2154,14 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
 			// (how far between the start-blending-out and fully-blended-out levels the current vertex is)
 			// So the opacity is 1.0 minus that.
 			var blendAmount = ! useLevels ? p :
-				'1.0 - smoothstep(' + v[ 0 ] + ', ' + v[ 1 ] + ', vPosition.z) + smoothstep(' + v[ 2 ] + ', ' + v[ 3 ] + ', vPosition.z)';
-			assign += '        color = mix( ' +
-                'texture2D( texture_' + i + ', MyvUv * vec2( ' + glslifyNumber( tiRepeat.x ) + ', ' + glslifyNumber( tiRepeat.y ) + ' ) + vec2( ' + glslifyNumber( tiOffset.x ) + ', ' + glslifyNumber( tiOffset.y ) + ' ) ), ' +
-                'color, ' +
-                'max(min(' + blendAmount + ', 1.0), 0.0)' +
-                ');\n';
+				`1.0 - smoothstep(${v[ 0 ]}, ${v[ 1 ]}, vPosition.z) + smoothstep(${v[ 2 ]}, ${v[ 3 ]}, vPosition.z)`;
+
+			const repeats = `vec2( ${glslifyNumber( tiRepeat.x )}, ${glslifyNumber( tiRepeat.y )} )`;
+			const offsets = `vec2( ${glslifyNumber( tiOffset.x )}, ${glslifyNumber( tiOffset.y )} )`;
+			const textureColor = `texture2D( texture_${i}, MyvUv * ${repeats} + ${offsets} )`;
+			const weight = `max(min(${blendAmount}, 1.0), 0.0)`;
+
+			assign += `color = mix( ${textureColor}, color, ${weight} * ${textureColor}.a );\n`;
 
 		}
 
