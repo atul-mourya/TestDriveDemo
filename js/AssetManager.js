@@ -110,49 +110,6 @@ class ImportAssets extends EventDispatcher {
 
 	}
 
-	async _loadLevel1() {
-
-		await new Promise( function ( resolve, reject ) {
-
-			var l = _global.level.alps.lake.map.model;
-
-			var heightmapImage = new Image();
-			heightmapImage.src = baseUrl + _global.level.alps.lake.map.heightMap;
-
-			var loader = new THREE.ObjectLoader();
-			loader.load( l, function ( obj ) {
-
-				// obj.rotation.set(0,0,0);
-				var o = {
-					easing: Terrain.Linear,
-					heightmap: heightmapImage,
-					maxHeight: 50,
-					minHeight: - 50,
-					smoothing: 'Gaussian (1.0, 11)',
-					steps: 1,
-					stretch: true,
-					turbulent: false,
-					useBufferGeometry: false,
-					xSize: _global.level.alps.lake.map.size[ 0 ],
-					ySize: _global.level.alps.lake.map.size[ 1 ],
-					xSegments: 499,
-					ySegments: 499,
-					optimization: Terrain.None,
-				};
-				// debugger
-				// Terrain.Gaussian(obj.geometry.vertices, o, 1, 11);
-				// Terrain.Normalize(obj, o);
-
-				_this.scene.add( obj );
-
-				resolve();
-
-			} );
-
-		} );
-
-	}
-
 	async _loadLevel() {
 
 		const scope = this;
@@ -167,7 +124,7 @@ class ImportAssets extends EventDispatcher {
 			const t2 = await loader.loadAsync( './images/GrassGreenTexture0002.jpg' );
 			const t3 = await loader.loadAsync( './images/rock001.png' );
 			const t4 = await loader.loadAsync( './images/snow1.jpg' );
-			const t5 = await loader.loadAsync( baseUrl + '/resources/data/events/alps/lake/r_exp4.png' );
+			const t5 = await loader.loadAsync( baseUrl + '/resources/data/events/alps/lake/road_upscaled.png' );
 
 			t1.wrapS = t1.wrapT = RepeatWrapping;
 			t2.wrapS = t2.wrapT = RepeatWrapping;
@@ -190,7 +147,7 @@ class ImportAssets extends EventDispatcher {
 				{ texture: t2, levels: [ seaLevel, seaLevel + 2, 20, 40 ] },
 				{ texture: t3, glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2' }, // between 27 and 45 degrees
 				{ texture: t4, glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)' },
-				// { texture: t5, glsl: '1.0' },
+				{ texture: t5, glsl: '1.0 - texture2D( texture_4, MyvUv ).a' },
 
 			], terrainMaterial );
 

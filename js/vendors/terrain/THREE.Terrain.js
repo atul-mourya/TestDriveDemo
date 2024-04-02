@@ -2161,7 +2161,7 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
 			const textureColor = `texture2D( texture_${i}, MyvUv * ${repeats} + ${offsets} )`;
 			const weight = `max(min(${blendAmount}, 1.0), 0.0)`;
 
-			assign += `color = mix( ${textureColor}, color, ${weight} * ${textureColor}.a );\n`;
+			assign += `color = mix( ${textureColor}, color, ${weight} );\n`;
 
 		}
 
