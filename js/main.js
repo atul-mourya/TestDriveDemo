@@ -220,7 +220,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		const pmremGenerator = new PMREMGenerator( _global.renderer );
 		pmremGenerator.compileEquirectangularShader();
 		var rgbe_loader = new RGBELoader();
-		const texture = await rgbe_loader.loadAsync( "/images/cannon_2k.hdr" );
+		const texture = await rgbe_loader.loadAsync( "./images/cannon_2k.hdr" );
 		texture.colorSpace = LinearSRGBColorSpace;
 		const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
 		_this.scene.environment = envMap;
