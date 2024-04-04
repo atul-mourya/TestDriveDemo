@@ -18,6 +18,7 @@ import {
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
 import Stats from 'three/examples/jsm/libs/stats.module';
+import RendererStats from './vendors/threex/threex.rendererstats';
 
 function isElement( obj ) {
 
@@ -132,7 +133,6 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		await scriptLoader.load( data.cdn, scripts );
 
 		console.log( 'scripts are loaded' );
-		_global.client = new ClientJS();
 		_global.clock = new Clock();
 
 	}
@@ -431,7 +431,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		_this.stats.dom.style.top = '0px';
 		_this.stats.dom.style.left = '80px';
 		document.body.appendChild( _this.stats.dom );
-		_this.rendererStats = new THREEx.RendererStats();
+		_this.rendererStats = new RendererStats();
 		_this.rendererStats.domElement.style.position = 'absolute';
 		_this.rendererStats.domElement.style.left = '0px';
 		_this.rendererStats.domElement.style.top = '0px';
@@ -444,14 +444,9 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 const TestDrive = function ( data, loadingManager, onGameReady ) {
 
 	var scripts = [
-		[
-			"/js/vendors/ammo/ammo.js",
-		],
-		[
-			"/js/vendors/threex/threex.rendererstats.js",
-			"/js/vendors/clientjs/client.min.js",
-
-		],
+		// [
+		// 	"/js/vendors/ammo/ammo.js",
+		// ],
 		// [
 		// 	"/js/PostProcessor.js"
 		// ]
