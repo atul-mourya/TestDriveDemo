@@ -1457,7 +1457,7 @@ Terrain.DiamondSquare = function ( g, options ) {
 
 	// Set the segment length to the smallest power of 2 that is greater than
 	// the number of vertices in either dimension of the plane
-	var segments = THREE.Math.nextPowerOfTwo( Math.max( options.xSegments, options.ySegments ) + 1 );
+	var segments = THREE.MathUtils.nextPowerOfTwo( Math.max( options.xSegments, options.ySegments ) + 1 );
 
 	// Initialize heightmap
 	var size = segments + 1,
@@ -1993,7 +1993,7 @@ Terrain.SimplexLayers = function ( g, options ) {
 
 		// Set the segment length to the smallest power of 2 that is greater
 		// than the number of vertices in either dimension of the plane
-		var segments = THREE.Math.nextPowerOfTwo( Math.max( options.xSegments, options.ySegments ) + 1 );
+		var segments = THREE.MathUtils.nextPowerOfTwo( Math.max( options.xSegments, options.ySegments ) + 1 );
 
 		// Store the array of white noise outside of the WhiteNoise function to
 		// avoid allocating a bunch of unnecessary arrays; we can just
@@ -2333,7 +2333,7 @@ Terrain.ScatterMeshes = function ( geometry, options ) {
 				// Interpolate rv between spread and spread + smoothSpread,
 				// then multiply that "easing" value by the probability
 				// that a mesh would get placed on a given face.
-				place = THREE.Terrain.EaseInOut( ( rv - options.spread ) * spreadRange ) * options.spread > Math.random();
+				place = Terrain.EaseInOut( ( rv - options.spread ) * spreadRange ) * options.spread > Math.random();
 
 			}
 
