@@ -153,19 +153,21 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		_this.needsReset = false;
 
+		let i = 0;
+		let dt = clock.getDelta();
 		_this.update = function () {
 
 			if ( ! _this.needsReset ) {
 
-				var dt = clock.getDelta();
-				for ( var i = 0; i < syncList.length; i ++ ) {
+				dt = clock.getDelta();
+				for ( i = 0; i < syncList.length; i ++ ) {
 
 					syncList[ i ]( dt );
 
 				}
 
-				physicsWorld.stepSimulation( dt, 1 );
-				updateCamera( dt );
+				physicsWorld.stepSimulation( dt, 0.5 );
+				updateCamera();
 				time += dt;
 
 			} else {
@@ -321,7 +323,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			var chassisWidth = 2.5;
 			var chassisHeight = 0.5;
 			var chassisLength = 6;
-			var massVehicle = 800;
+			var massVehicle = 500;
 
 			var wheelAxisPositionBack = - 2.45;
 			var wheelRadiusBack = 0.7;
@@ -335,8 +337,8 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			var wheelRadiusFront = 0.7;
 			var wheelWidthFront = 0.2;
 
-			var friction = 5;
-			var suspensionStiffness = 20.0;
+			var friction = 2;
+			var suspensionStiffness = 10.0;
 			var suspensionDamping = 2.3;
 			var suspensionCompression = 4.4;
 			var suspensionRestLength = 0.6;
@@ -345,7 +347,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			var steeringIncrement = 0.04;
 			var steeringClamp = 0.5;
 			var maxEngineForce = 2000;
-			var maxBreakingForce = 1000;
+			var maxBreakingForce = 500;
 
 			// Chassis
 			var geometry = new Ammo.btBoxShape( new Ammo.btVector3( chassisWidth * 0.5, chassisHeight * 0.5, chassisLength * 0.5 ) );
@@ -413,10 +415,14 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			addWheel( false, new Ammo.btVector3( - wheelHalfTrackBack, wheelAxisHeightBack, wheelAxisPositionBack ), wheelRadiusBack, wheelWidthBack, BACK_LEFT, wheels[ 3 ] );
 			addWheel( false, new Ammo.btVector3( wheelHalfTrackBack, wheelAxisHeightBack, wheelAxisPositionBack ), wheelRadiusBack, wheelWidthBack, BACK_RIGHT, wheels[ 2 ] );
 
+			let speed = 0;
+			var tm, p, q, i;
+			var n = vehicle.getNumWheels();
+
 			// Sync keybord actions and physics and graphics
 			function sync( dt ) {
 
-				var speed = vehicle.getCurrentSpeedKmHour();
+				speed = vehicle.getCurrentSpeedKmHour();
 				speedometer.innerHTML = ( speed < 0 ? '(R) ' : '' ) + Math.abs( speed ).toFixed( 1 ) + ' km/h';
 
 				breakingForce = 0;
@@ -471,8 +477,6 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 				vehicle.setSteeringValue( vehicleSteering, FRONT_LEFT );
 				vehicle.setSteeringValue( vehicleSteering, FRONT_RIGHT );
 
-				var tm, p, q, i;
-				var n = vehicle.getNumWheels();
 				for ( i = 0; i < n; i ++ ) {
 
 					vehicle.updateWheelTransform( i, true );
