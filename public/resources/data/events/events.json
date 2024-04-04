@@ -1,0 +1,81 @@
+{
+    "alps": {
+        "green": {
+            "car":{
+                "origin":[44, -18, 483],
+                "orientation": [0.00028785018366761506, 0.9526505470275879, 0.000902713043615222, 0.3040658235549927]
+            },
+            "map": {
+                "size": [1000, 1000],
+                "heightRange": [50, -50],
+                "heightMap": "/resources/data/events/alps/green/h.png",
+                "smooth": "none",
+                "model": "/resources/data/events/alps/green/model.json"
+            }
+        },
+        "lake": {
+            "car":{
+                "origin":[136, -10, 223],
+                "orientation": [-0.004776066169142723, 0.9873268604278564, 0.03702449053525925, 0.15424658358097076]
+            },
+            "map": {
+                "size": [800, 800],
+                "heightRange": [40, -40],
+                "seaLevel": -13.5,
+                "heightMap": "/resources/data/events/alps/lake/h.png",
+                "smooth": "none",
+                "model": "/resources/data/events/alps/lake/model.json"
+            }
+        },
+        "mountain": {
+            "car":{
+                "origin":[68, 30, 297],
+                "orientation": [0.0015287701971828938, 0.9430171251296997, 0.01606256701052189, 0.33235278725624084]
+            },
+            "map": {
+                "size": [1000, 1000],
+                "heightRange": [50, -50],
+                "heightMap": "/resources/data/events/alps/mountain/h.png",
+                "smooth": "none"
+            }
+        },
+        "rocky": {
+            "car":{
+                "origin":[-344, -10, -371],
+                "orientation": [0.0006218767957761884, 0.7543909549713135, 0.0007149191806092858, 0.6564247608184814]
+            },
+            "map": {
+                "size": [1000, 1000],
+                "heightRange": [50, -50],
+                "heightMap": "/resources/data/events/alps/rocky/h.png",
+                "smooth": "none"
+            }
+        },
+        "dawn": {
+            "car":{
+                "origin":[-122, 32, -410],
+                "orientation": [-0.01717892847955227, 0.6172253489494324, 0.013930442743003368, 0.7864754796028137]
+            },
+            "map": {
+                "size": [1000, 1000],
+                "heightRange": [50, -50],
+                "heightMap": "/resources/data/events/alps/dawn/h.png",
+                "smooth": "none"
+            }
+        }
+    },
+    "chasing":{
+        "daybreak": {
+            "car":{
+                "origin":[100, 0, 43],
+                "orientation": [0.00028785018366761506, 0.9526505470275879, 0.000902713043615222, 0.3040658235549927]
+            },
+            "map": {
+                "size": [1000, 1000],
+                "heightRange": [50, -50],
+                "heightMap": "/resources/data/events/chasing/daybreak/h.png",
+                "smooth": "none"
+            }
+        }
+    }
+}

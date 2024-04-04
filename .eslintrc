@@ -1,0 +1,8 @@
+{
+  "extends": "mdcs",
+  "rules": {},
+  "ignorePatterns": [
+    "node_modules",
+    "dist"
+  ]
+}
