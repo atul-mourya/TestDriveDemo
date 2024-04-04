@@ -4,7 +4,8 @@ import {
 	TextureLoader,
 	RepeatWrapping,
 	MeshLambertMaterial,
-	MeshStandardMaterial
+	MeshStandardMaterial,
+	SRGBColorSpace
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/THREE.Terrain';
@@ -131,6 +132,12 @@ class ImportAssets extends EventDispatcher {
 			t3.wrapS = t3.wrapT = RepeatWrapping;
 			// t5.wrapS = t3.wrapT = RepeatWrapping;
 
+			t1.colorSpace = SRGBColorSpace;
+			t2.colorSpace = SRGBColorSpace;
+			t3.colorSpace = SRGBColorSpace;
+			t4.colorSpace = SRGBColorSpace;
+			t5.colorSpace = SRGBColorSpace;
+
 			t1.repeat.x = t1.repeat.y = 200;
 			t2.repeat.x = t2.repeat.y = 200;
 			t3.repeat.x = t3.repeat.y = 20;
@@ -139,7 +146,6 @@ class ImportAssets extends EventDispatcher {
 				roughness: 1,
 				metalness: 0,
 				envMapIntensity: 0,
-				toneMapped: false,
 			} );
 			const seaLevel = this.level.alps.lake.map.seaLevel;
 			terrainMaterial = Terrain.generateBlendedMaterial( [

@@ -13,7 +13,7 @@ import {
 	DirectionalLight,
 	PMREMGenerator,
 	ACESFilmicToneMapping,
-	SRGBColorSpace,
+	LinearSRGBColorSpace,
 } from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
@@ -226,6 +226,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		pmremGenerator.compileEquirectangularShader();
 		var rgbe_loader = new RGBELoader();
 		const texture = await rgbe_loader.loadAsync( "/images/cannon_2k.hdr" );
+		texture.colorSpace = LinearSRGBColorSpace;
 		const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
 		_this.scene.environment = envMap;
 		texture.dispose();
@@ -234,7 +235,6 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		_this.scene.background = _this.scene.environment;
 		_this.scene.environmentIntensity = 1;
 
-		_global.renderer.outputSpace = SRGBColorSpace,
 		_global.renderer.toneMapping = ACESFilmicToneMapping;
 		_global.renderer.toneMappingExposure = 0.85;
 
@@ -252,7 +252,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		water.name = 'Water';
 		_this.scene.add( water );
 
-		const directionalLight = new DirectionalLight( 0xffffff, 2 );
+		const directionalLight = new DirectionalLight( 0xffffff, 1 * Math.PI );
 		directionalLight.position.set( 1, 1, 1 ).normalize(); // set the direction
 		scene.add( directionalLight );
 
