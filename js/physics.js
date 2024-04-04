@@ -125,7 +125,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 					break;
 				case 3:
 					temp.setFromMatrixPosition( goal.matrixWorld );
-					camera.position.lerp( temp, 0.1 );
+					camera.position.lerp( temp, 0.05 );
 					camera.lookAt( chassis.position );
 					break;
 
@@ -179,7 +179,6 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		};
 
-
 		function keyup( e ) {
 
 			if ( keysActions[ e.code ] ) {
@@ -201,67 +200,6 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 				e.preventDefault();
 				e.stopPropagation();
 				return false;
-
-			}
-
-		}
-
-		//only for reference. Not in use
-		function createPlane( pos, quat, w, l, h, mass, friction ) {
-
-
-			var material = mass > 0 ? materialDynamic : materialStatic;
-			var shape = new BoxGeometry( w, l, h, 1, 1, 1 );
-			var geometry = new Ammo.btBoxShape( new Ammo.btVector3( w * 0.5, l * 0.5, h * 0.5 ) );
-
-			if ( ! mass ) mass = 0;
-			if ( ! friction ) friction = 1;
-
-			var mesh = new Mesh( shape, material );
-			mesh.position.copy( pos );
-			mesh.quaternion.copy( quat );
-			mesh.name = "fake ground1";
-			mesh.visible = false;
-			scene.add( mesh );
-
-			var transform = new Ammo.btTransform();
-			transform.setIdentity();
-			transform.setOrigin( new Ammo.btVector3( pos.x, pos.y, pos.z ) );
-			transform.setRotation( new Ammo.btQuaternion( quat.x, quat.y, quat.z, quat.w ) );
-			var motionState = new Ammo.btDefaultMotionState( transform );
-
-			var localInertia = new Ammo.btVector3( 0, 0, 0 );
-			geometry.calculateLocalInertia( mass, localInertia );
-
-			var rbInfo = new Ammo.btRigidBodyConstructionInfo( mass, motionState, geometry, localInertia );
-			var body = new Ammo.btRigidBody( rbInfo );
-
-			body.setFriction( friction );
-			//body.setRestitution(.9);
-			//body.setDamping(0.2, 0.2);
-
-			physicsWorld.addRigidBody( body );
-
-			if ( mass > 0 ) {
-
-				body.setActivationState( DISABLE_DEACTIVATION );
-				// Sync physics and graphics
-				function sync( dt ) {
-
-					var ms = body.getMotionState();
-					if ( ms ) {
-
-						ms.getWorldTransform( TRANSFORM_AUX );
-						var p = TRANSFORM_AUX.getOrigin();
-						var q = TRANSFORM_AUX.getRotation();
-						mesh.position.set( p.x(), p.y(), p.z() );
-						mesh.quaternion.set( q.x(), q.y(), q.z(), q.w() );
-
-					}
-
-				}
-
-				syncList.push( sync );
 
 			}
 
@@ -303,22 +241,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		}
 
-		function createDummyChassisMesh( length, width, height ) {
-
-			var t = new BoxGeometry( width, height, length );
-			var mesh = new Mesh( t, materialInteractive );
-			mesh.name = "Fake Chassis";
-			scene.add( mesh );
-			chassis = mesh;
-			return mesh;
-
-		}
-
-		function createVehicle( position, quaternion, chassis, wheels ) {
-
-			// Vehicle contants
-			var pos = position || chassis.position;
-			var quat = quaternion || chassis.quaternion;
+		function createVehicle( chassis, wheels ) {
 
 			var chassisWidth = 2.5;
 			var chassisHeight = 0.5;
@@ -346,7 +269,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 			var steeringIncrement = 0.04;
 			var steeringClamp = 0.5;
-			var maxEngineForce = 2000;
+			var maxEngineForce = 500;
 			var maxBreakingForce = 500;
 
 			// Chassis
@@ -420,7 +343,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			var n = vehicle.getNumWheels();
 
 			// Sync keybord actions and physics and graphics
-			function sync( dt ) {
+			function sync() {
 
 				speed = vehicle.getCurrentSpeedKmHour();
 				speedometer.innerHTML = ( speed < 0 ? '(R) ' : '' ) + Math.abs( speed ).toFixed( 1 ) + ' km/h';
@@ -513,7 +436,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 		function createObjects() {
 
 			// createPlane(new THREE.Vector3(0, -5, 0), ZERO_QUATERNION, 1000, 0.01, 1000, 0, 2);
-			createVehicle( new Vector3( 0, 0, 0 ), ZERO_QUATERNION, chassis, wheels );
+			createVehicle( chassis, wheels );
 			_this.isReady = true;
 
 		}
