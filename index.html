@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Test Drive</title>
+    <!-- <base href = "TestDriveDemo/app" /> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="scripts/ammo/ammo.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="data:text/css;base64,I2dhbWUtY29udGFpbmVyIHsKICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTsKICAgIHRvcDogMHB4OwogICAgbGVmdDogMHB4OwogICAgaGVpZ2h0OiAxMDAlOwogICAgd2lkdGg6IDEwMCU7CiAgICBkaXNwbGF5OiBub25lOwp9CiNtYWluLW1lbnV7CiAgICBwb3NpdGlvbjogYWJzb2x1dGU7CiAgICBoZWlnaHQ6IDEwMCU7CiAgICB3aWR0aDogMTAwJTsKICAgIHRvcDogMCU7CiAgICBsZWZ0OiAwJTsKICAgIGJhY2tncm91bmQtY29sb3I6IGFxdWFtYXJpbmU7Cn0KI29wdGlvbnMgewogICAgcG9zaXRpb246IGFic29sdXRlOwogICAgYm90dG9tOiAyMHB4OwogICAgbGVmdDogMjBweDsKICAgIHdpZHRoOiAzMDBweDsKfQoub3B0aW9uLWJ0biBwewogICAgdHJhbnNmb3JtOiBza2V3WCgzOGRlZyk7Cn0gCi5vcHRpb24tYnRuIHsKICAgIHRyYW5zZm9ybTogc2tld1goLTM4ZGVnKTsKfQoKLm9wdGlvbi1idG4sICNmb290ZXItbWVudSBkaXZ7CiAgICBjb2xvcjogIzMxMzAyQjsKICAgIHdpZHRoOiAxMDAlOwogICAgYmFja2dyb3VuZDogI0ZGRjsKICAgIG1hcmdpbjogMTBweDsKICAgIGZvbnQtZmFtaWx5OiAnT3BlblNhbnNCb2xkJywgc2Fucy1zZXJpZjsKICAgIGJvcmRlcjogM3B4IHNvbGlkICMzMTMwMkI7CiAgICBmb250LXNpemU6IDE0cHg7CiAgICBmb250LXdlaWdodDogYm9sZDsKICAgIGxldHRlci1zcGFjaW5nOiAxcHg7CiAgICB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlOwogICAgYm9yZGVyLXJhZGl1czogMnB4OwogICAgZGlzcGxheTogaW5saW5lLWJsb2NrOwogICAgdGV4dC1hbGlnbjogY2VudGVyOwogICAgY3Vyc29yOiBwb2ludGVyOwogICAgYmFja2dyb3VuZC1pbWFnZTogbGluZWFyLWdyYWRpZW50KDEzNWRlZywgIzMxMzAyQiA1MCUsIHRyYW5zcGFyZW50IDUxJSk7CiAgICBiYWNrZ3JvdW5kLXNpemU6IDEwMHB4IDEwMHB4OyAvKiBzb21lIGluaXRpYWwgc2l6ZSB0byBnZXQgdGhlIHNsYW50ZWQgYXBwZWFyYW5jZSAqLwogICAgYmFja2dyb3VuZC1wb3NpdGlvbjogLTUwcHggLTUwcHg7IC8qIG5lZ2F0aXZlIHBvc2l0aW9uaW5nIHRvIGhpZGUgaXQgaW5pdGlhbGx5ICovCiAgICBiYWNrZ3JvdW5kLXJlcGVhdDogbm8tcmVwZWF0OwogICAgdHJhbnNpdGlvbjogYWxsIGVhc2UgMC40czsKICB9CiAgLm9wdGlvbi1idG46aG92ZXIsICAjZm9vdGVyLW1lbnUgZGl2OmhvdmVyIHsKICAgIGJhY2tncm91bmQtc2l6ZTogMjAwJSAyMDAlOyAvKiAyMDAlIGJlY2F1c2UgZ3JhZGllbnQgaXMgY29sb3JlZCBvbmx5IGZvciA1MCUgKi8KICAgIGJhY2tncm91bmQtcG9zaXRpb246IDBweCAwcHg7IC8qIGJyaW5nIGl0IGZ1bGx5IGludG8gdmlldyAqLwogICAgY29sb3I6ICNGRkY7CiAgfQoKI2Zvb3Rlci1tZW51ewogICAgcG9zaXRpb246IGFic29sdXRlOwogICAgcmlnaHQ6IDIwcHg7CiAgICBib3R0b206IDIwcHg7Cn0KI2Zvb3Rlci1tZW51IGRpdnsKICAgIHdpZHRoOiA0MHB4OwogICAgaGVpZ2h0OiA0MHB4OwogICAgYm9yZGVyOiAzcHggc29saWQgIzMxMzAyQjsKICAgIGJvcmRlci1yYWRpdXM6IDI1cHg7CiAgICBiYWNrZ3JvdW5kLWNvbG9yOiAjZmZmOwp9CiNmb290ZXItbWVudSBpewogICAgcGFkZGluZzogNXB4IDEwcHg7CiAgICBmb250LXNpemU6IDMwcHg7Cn0KI2Zvb3Rlci1tZW51IGk6aG92ZXIgewogICAgYmFja2dyb3VuZC1zaXplOiAyMDAlIDIwMCU7IC8qIDIwMCUgYmVjYXVzZSBncmFkaWVudCBpcyBjb2xvcmVkIG9ubHkgZm9yIDUwJSAqLwogICAgYmFja2dyb3VuZC1wb3NpdGlvbjogMHB4IDBweDsgLyogYnJpbmcgaXQgZnVsbHkgaW50byB2aWV3ICovCiAgICBjb2xvcjogI0ZGRjsKfQoKI2xvYWRlcnsKICAgIHBvc2l0aW9uOiBhYnNvbHV0ZTsKICAgIGRpc3BsYXk6IG5vbmU7CiAgICB0b3A6IDAlOwogICAgbGVmdDogMDsKICAgIGhlaWdodDogMTAwJTsKICAgIHdpZHRoOiAxMDAlOwogICAgYmFja2dyb3VuZC1jb2xvcjogcmdiKDI1NSwgMjU1LCAyNTUpOwogICAgei1pbmRleDogMjsKfQoKI2xvYWRlciBpbWd7CiAgICBwb3NpdGlvbjogYWJzb2x1dGU7CiAgICBoZWlnaHQ6IDEyMHB4OwogICAgd2lkdGg6IDEyMHB4OwogICAgbGVmdDogY2FsYyggNTAlIC0gNjBweCApOwogICAgdG9wOiBjYWxjKCA1MCUgLSA2MHB4ICk7Cn0=" />
+  <script type="module" crossorigin src="/assets/index-Bt5Dpia-.js"></script>
+</head>
+<body>
+    <div id="main-menu">
+        <div id="options">
+            <button class="option-btn" id="quick-play">
+                <p>Quick Play</p>
+            </button>
+            <button class="option-btn" id="events">
+                <p>Events</p>
+            </button>
+            <button class="option-btn" id="custom-play">
+                <p>Custom Play</p>
+            </button>
+            <button class="option-btn" id="settings">
+                <p>Settings</p>
+            </button>
+            <button class="option-btn" id="about">
+                <p>About</p>
+            </button>
+        </div>
+        <div id="footer-menu">
+            <div><i class="fas fa-volume-off"></i></div>
+        </div>
+    </div>
+    <div id="loader"><img src="images/loader.gif"></img></div>
+    
+    <div id="game-container"></div>
+</body>
+</html>
