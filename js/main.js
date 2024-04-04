@@ -18,8 +18,7 @@ import {
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
 import Stats from 'three/examples/jsm/libs/stats.module';
-// import { Reflector } from 'three/examples/jsm/objects/Reflector';
-// import { Refractor } from 'three/examples/jsm/objects/Refractor';
+
 function isElement( obj ) {
 
 	try {
@@ -102,10 +101,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		fogEffectOnCar: false,
 		physicallyCorrectLights: false, // for more realistic lighting at cost of computation
 		toneMappingExposure: 1,
-		toneMappingWhitePoint: 1,
-		rendererGammaInput: true,
-		rendererGammaOutput: true,
-		fpsLimit: 30, // frame per second
+		fpsLimit: 50, // frame per second
 		enableShadow: false,
 		resolution: 0.25,
 
@@ -193,7 +189,6 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 	function _initCamera() {
 
 		_this.camera = new PerspectiveCamera( 45, _global.canvas.width / _global.canvas.height, 0.1, 5000 );
-		// _this.camera.lookAt(0, _this.setting.ground_clearence, 0);
 
 	}
 
@@ -239,9 +234,9 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		_global.renderer.toneMappingExposure = 0.85;
 
 		const water = new Water( new PlaneGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
-			color: new Color( 0xffffff ),
+			color: new Color( 0xc7cbc6 ),
 			scale: 100,
-			flowDirection: new Vector2( 0.75, 0.75 ),
+			flowDirection: new Vector2( 0.65, 0.65 ),
 			normalMap0: new TextureLoader().load( './images/Water_1_M_Normal.jpg' ),
 			normalMap1: new TextureLoader().load( './images/Water_2_M_Normal.jpg' ),
 			textureWidth: 1024,
@@ -289,11 +284,11 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	function _animateFrame() {
 
-		setTimeout( function () {
+		// setTimeout( function () {
 
-			requestAnimationFrame( _animateFrame );
+		requestAnimationFrame( _animateFrame );
 
-		}, 1000 / _this.setting.fpsLimit );
+		// }, 1000 / _this.setting.fpsLimit );
 
 
 		if ( _this.sceneReady && ( _global.doAnimate == true || _this.setting.userControlledAimation == true ) ) {
