@@ -437,6 +437,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 			// createPlane(new THREE.Vector3(0, -5, 0), ZERO_QUATERNION, 1000, 0.01, 1000, 0, 2);
 			createVehicle( chassis, wheels );
+			_this.isReady = true;
 
 		}
 
@@ -544,9 +545,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 		initTerrain( terrainData.heightData );
 
 		createObjects();
-
 		onPhysicsReady && onPhysicsReady();
-
 		// _updatePhysics();
 
 	} );

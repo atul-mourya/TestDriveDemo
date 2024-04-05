@@ -210,26 +210,25 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 	var onPhysicsReady = async function () {
 
 		await _loadEnvironment();
-		_this.physics.isReady = true;
 		onGameReady();
 
 	};
 
 	async function _loadEnvironment() {
 
-		const pmremGenerator = new PMREMGenerator( _global.renderer );
-		pmremGenerator.compileEquirectangularShader();
-		var rgbe_loader = new RGBELoader();
-		const texture = await rgbe_loader.loadAsync( "./images/cannon_2k.hdr" );
+		// const pmremGenerator = new PMREMGenerator( _global.renderer );
+		// pmremGenerator.compileEquirectangularShader();
+		// var rgbe_loader = new RGBELoader();
+		// const texture = await rgbe_loader.loadAsync( "./images/cannon_2k.hdr" );
 		console.log( 'supp nigga' );
-		texture.colorSpace = LinearSRGBColorSpace;
-		const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
-		_this.scene.environment = envMap;
-		texture.dispose();
-		pmremGenerator.dispose();
+		// texture.colorSpace = LinearSRGBColorSpace;
+		// const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
+		// _this.scene.environment = envMap;
+		// texture.dispose();
+		// pmremGenerator.dispose();
 
-		_this.scene.background = _this.scene.environment;
-		_this.scene.environmentIntensity = 1;
+		// _this.scene.background = _this.scene.environment;
+		// _this.scene.environmentIntensity = 1;
 
 		_global.renderer.toneMapping = ACESFilmicToneMapping;
 		_global.renderer.toneMappingExposure = 0.85;
