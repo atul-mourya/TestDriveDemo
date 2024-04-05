@@ -220,7 +220,7 @@ class ImportAssets extends EventDispatcher {
 	async buildTree() {
 
 		const loader = new GLTFLoader();
-		const data = await loader.loadAsync( './resources/models/Folliage/tree1.glb' );
+		const data = await loader.loadAsync( './resources/models/Folliage/tree.glb' );
 
 		return data.scenes[ 0 ].children[ 0 ];
 
