@@ -166,7 +166,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 				}
 
-				physicsWorld.stepSimulation( dt, 0.5 );
+				physicsWorld.stepSimulation( dt, 1 );
 				updateCamera();
 				time += dt;
 
