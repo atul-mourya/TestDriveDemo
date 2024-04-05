@@ -207,9 +207,10 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	}
 
-	var onPhysicsReady = function () {
+	var onPhysicsReady = async function () {
 
-		_loadEnvironment();
+		await _loadEnvironment();
+		_this.physics.isReady = true;
 		onGameReady();
 
 	};
@@ -220,6 +221,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		pmremGenerator.compileEquirectangularShader();
 		var rgbe_loader = new RGBELoader();
 		const texture = await rgbe_loader.loadAsync( "./images/cannon_2k.hdr" );
+		console.log( 'supp nigga' );
 		texture.colorSpace = LinearSRGBColorSpace;
 		const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
 		_this.scene.environment = envMap;
