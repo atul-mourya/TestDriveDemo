@@ -44,7 +44,6 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		loadingManager: loadingManager,
 		bodyColoredParts: {},
 		standardParts: {},
-		baseParts: {},
 		environmentParts: {},
 		carBody: null,
 		sceneReady: false,

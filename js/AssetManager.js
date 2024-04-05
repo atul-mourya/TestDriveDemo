@@ -1,11 +1,11 @@
 import {
 	EventDispatcher,
-	ObjectLoader,
 	TextureLoader,
 	RepeatWrapping,
 	MeshLambertMaterial,
 	MeshStandardMaterial,
-	SRGBColorSpace
+	SRGBColorSpace,
+	Group
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/THREE.Terrain';
@@ -33,7 +33,6 @@ class ImportAssets extends EventDispatcher {
 		this.level = null;
 		this.reflectionCube = null;
 
-		this.baseParts = null;
 		this.terrainObj = null;
 		this.heightData = null;
 
@@ -95,11 +94,11 @@ class ImportAssets extends EventDispatcher {
 		this.envMapComponent = [];
 		this.wheels = [];
 
-		var loader = new ObjectLoader( loadManager );
-		var base = await loader.loadAsync( baseUrl + model.url );
+		var loader = new GLTFLoader( loadManager );
+		const base = await loader.loadAsync( baseUrl + model.url );
+		const data = base.scenes[ 0 ].children[ 0 ];
 
-		this._organiseObjects( base, "Car" );
-		this.baseParts = base;
+		this.decomposeParts( data, "Car" );
 
 	}
 
@@ -107,7 +106,6 @@ class ImportAssets extends EventDispatcher {
 
 		const data = await fetch( baseUrl + json.events.url );
 		this.level = await data.json();
-		return;
 
 	}
 
@@ -289,107 +287,30 @@ class ImportAssets extends EventDispatcher {
 
 	}
 
-	_loadCubeMap( path, callback, loadManager ) {
+	decomposeParts( obj, name ) {
 
-		var format = '.jpg';
-		var urls = [
-			path + 'r' + format, path + 'l' + format,
-			path + 'u' + format, path + 'd' + format,
-			path + 'f' + format, path + 'b' + format
-		];
-		var reflectionCube = new THREE.CubeTextureLoader( loadManager ).load( urls, callback );
-		return reflectionCube;
+		this.carBody = new Group();
+		this.carBody.name = name;
 
-	}
+		const wheelNames = [ "wheelFR", "wheelFL", "wheelRR", "wheelRL" ];
 
-	_organiseObjects( obj, name ) {
+		var length = obj.children.length;
+		for ( var i = 0; i < length; i ++ ) {
 
-		const scope = this;
-		if ( obj.type === "Group" || obj.type === "Group" || obj.type === "Scene" ) {
+			if ( wheelNames.includes( obj.children[ i ].name ) ) {
 
-			obj.name = name;
+				this.wheels.push( obj.children[ i ] );
 
-			var length = obj.children.length;
-			for ( var i = 0; i < length; i ++ ) {
+			} else {
 
-				if ( obj.children[ i ].type == "Group" ) {
-
-					obj.children[ i ].children.forEach( function ( object ) {
-
-						scope._applyObjectSetups( object );
-
-					} );
-
-					if ( obj.children[ i ].userData.isWheel ) {
-
-						scope.wheels.push( obj.children[ i ] );
-
-					} else {
-
-						scope.carBody.add( obj.children[ i ] );
-
-					}
-
-				} else {
-
-					scope._applyObjectSetups( obj.children[ i ] );
-
-					if ( ! obj.children[ i ].userData.isWheel && scope.carBody ) {
-
-						if ( scope.carBody.name != "body" ) this.carBody.add( obj.children[ i ] );
-
-					}
-
-				}
+				this.carBody.add( obj.children[ i ].clone() );
 
 			}
 
-			for ( var i = 0; i < length; i ++ ) {
-
-				if ( ! obj.children[ i ].userData.isWheel && scope.carBody && obj.children[ i ].name != "body" ) {
-
-					scope.carBody.add( obj.children[ i ].clone() );
-
-				}
-
-			}
-
-			// _this.scene.add( obj );
-
 		}
 
 
 	}
-
-	_applyObjectSetups( obj ) {
-
-		obj.castShadow = false;
-		obj.receiveShadow = false;
-		if ( obj.name == "body" ) {
-
-			obj.material.envMap = this.scene.environment;
-			this.storedMaterial.body = obj.material;
-			this.carBody = obj;
-
-		}
-
-		// this._fetchEnvMapComponent( obj );
-
-	}
-
-	_fetchEnvMapComponent( obj ) {
-
-		if ( obj.material.envMap && ( obj.material.userData.blurredEnvMap == undefined || obj.material.userData.blurredEnvMap == false ) ) {
-
-			this.envMapComponent.push( obj );
-			obj.material.envMap.dispose();
-			obj.material.needsUpdate = true;
-
-		}
-
-	}
-
-	// } );
 
 }
 
