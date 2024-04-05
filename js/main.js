@@ -183,6 +183,8 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 		if ( tracker.analysis ) _stats();
 
+		_stopAnimate();
+
 	}
 
 	function _initCamera() {
@@ -193,15 +195,13 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	function _initAssetManager() {
 
+		_global.sceneReady = false;
+
 		const assetManager = new ImportAssets( _this.setting, _this.scene );
 		assetManager.addEventListener( 'ready', () => {
 
-			_global.sceneReady = true;
-
 			_global.level = assetManager.level;
 			_this.physics = new Physics( assetManager.envMeshes, assetManager.carBody, assetManager.wheels, _this.camera, assetManager.heightData, onPhysicsReady );
-			_this.sceneReady = true;
-			_refreshRenderFrame();
 
 		} );
 
@@ -211,24 +211,25 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 		await _loadEnvironment();
 		onGameReady();
+		_this.sceneReady = true;
+		_startAnimate();
 
 	};
 
 	async function _loadEnvironment() {
 
-		// const pmremGenerator = new PMREMGenerator( _global.renderer );
-		// pmremGenerator.compileEquirectangularShader();
-		// var rgbe_loader = new RGBELoader();
-		// const texture = await rgbe_loader.loadAsync( "./images/cannon_2k.hdr" );
-		console.log( 'supp nigga' );
-		// texture.colorSpace = LinearSRGBColorSpace;
-		// const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
-		// _this.scene.environment = envMap;
-		// texture.dispose();
-		// pmremGenerator.dispose();
+		const pmremGenerator = new PMREMGenerator( _global.renderer );
+		pmremGenerator.compileEquirectangularShader();
+		var rgbe_loader = new RGBELoader();
+		const texture = await rgbe_loader.loadAsync( "./images/cannon_2k.hdr" );
+		texture.colorSpace = LinearSRGBColorSpace;
+		const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
+		_this.scene.environment = envMap;
+		texture.dispose();
+		pmremGenerator.dispose();
 
-		// _this.scene.background = _this.scene.environment;
-		// _this.scene.environmentIntensity = 1;
+		_this.scene.background = _this.scene.environment;
+		_this.scene.environmentIntensity = 1;
 
 		_global.renderer.toneMapping = ACESFilmicToneMapping;
 		_global.renderer.toneMappingExposure = 0.85;
@@ -268,11 +269,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	function _startAnimate() {
 
-		if ( ! _global.doAnimate ) {
-
-			_global.doAnimate = true;
-
-		}
+		_global.doAnimate = true;
 
 	}
 
@@ -291,7 +288,7 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		// }, 1000 / _this.setting.fpsLimit );
 
 
-		if ( _this.sceneReady && ( _global.doAnimate == true || _this.setting.userControlledAimation == true ) ) {
+		if ( _this.sceneReady && _global.doAnimate == true ) {
 
 			// _this.controls.update();
 			if ( tracker.analysis ) {
