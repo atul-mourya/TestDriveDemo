@@ -6,8 +6,8 @@ import {
 	Object3D,
 	CylinderGeometry,
 	Mesh,
-	PlaneGeometry
 } from 'three';
+import TerrainPhysics from './TerrainPhysics';
 
 var vec3 = new Vector3();
 var quat = new Quaternion();
@@ -20,17 +20,7 @@ class Physics {
 
 		var materialInteractive = new MeshPhongMaterial( { color: 0x990000 } );
 
-		var terrainWidth = terrainData.terrainWidth;
-		var terrainDepth = terrainData.terrainDepth;
-		var terrainMaxHeight = terrainData.terrainMaxHeight;
-		var terrainMinHeight = terrainData.terrainMinHeight;
-
-		var ammoHeightData = null;
-
-		this.clock = new Clock();
-		this.camera = camera;
-		this.chassis = chassis;
-		this.body = null; // Ammo.btRigidBody
+		const scope = this;
 
 		// Physics configuration
 		const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -40,8 +30,16 @@ class Physics {
 		this.physicsWorld = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration );
 		this.physicsWorld.setGravity( new Ammo.btVector3( 0, - 9.75, 0 ) );
 
+		this.clock = new Clock();
+		this.camera = camera;
+		this.chassis = chassis;
+		this.body = null; // Ammo.btRigidBody
 		this.syncList = [];
 		this.time = 0;
+		this.cameraMode = 3;
+		this.chaseCamMount = new Object3D();
+		this.chaseCamMount.position.set( 0, 400, - 1000 );
+		this.needsReset = false;
 
 		// Keybord actions
 		var actions = {};
@@ -57,13 +55,6 @@ class Physics {
 		speedometer.style.bottom = '0px';
 		speedometer.style.left = '0px';
 		document.body.appendChild( speedometer );
-
-		this.cameraMode = 3;
-		this.chaseCamMount = new Object3D();
-		this.chaseCamMount.position.set( 0, 400, - 1000 );
-		this.needsReset = false;
-
-		const scope = this;
 
 		function keyup( e ) {
 
@@ -320,103 +311,8 @@ class Physics {
 
 		}
 
-		// source sin fuction plane ammojs git
-		function createTerrainShape( heightData ) {
-
-			// This parameter is not really used, since we are using PHY_FLOAT height data type and hence it is ignored
-			var heightScale = 1;
-
-			// Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
-			var upAxis = 1;
-
-			// hdt, height data type. "PHY_FLOAT" is used. Possible values are "PHY_FLOAT", "PHY_UCHAR", "PHY_SHORT"
-			var hdt = "PHY_FLOAT";
-
-			// Set this to your needs (inverts the triangles)
-			var flipQuadEdges = false;
-
-			// Creates height data buffer in Ammo heap
-			ammoHeightData = Ammo._malloc( 4 * terrainWidth * terrainDepth );
-
-			// Copy the javascript height data array to the Ammo one.
-			var p = 0;
-			var p2 = 0;
-			for ( var j = 0; j < terrainDepth; j ++ ) {
-
-				for ( var i = 0; i < terrainWidth; i ++ ) {
-
-					// write 32-bit float data to memory
-					Ammo.HEAPF32[ ammoHeightData + p2 >> 2 ] = heightData[ p ];
-
-					p ++;
-
-					// 4 bytes/float
-					p2 += 4;
-
-				}
-
-			}
-
-			// Creates the heightfield physics shape
-			var heightFieldShape = new Ammo.btHeightfieldTerrainShape(
-
-				terrainWidth,
-				terrainDepth,
-
-				ammoHeightData,
-
-				heightScale,
-				terrainMinHeight,
-				terrainMaxHeight,
-
-				upAxis,
-				hdt,
-				flipQuadEdges
-			);
-
-			// Set horizontal scale
-			// var scaleX = terrainWidthExtents / (terrainWidth - 1);
-			// var scaleZ = terrainDepthExtents / (terrainDepth - 1);
-			heightFieldShape.setLocalScaling( new Ammo.btVector3( 1, 1, 1 ) );
-
-			heightFieldShape.setMargin( 0.05 );
-
-			return heightFieldShape;
-
-		}
-
-		function createTerrain( heightData ) {
-
-			var geometry = new PlaneGeometry( terrainWidth, terrainWidth, terrainWidth - 1, terrainWidth - 1 );
-			geometry.rotateX( - Math.PI / 2 );
-
-			for ( var i = 0; i < geometry.attributes.position.count; i ++ ) {
-
-				geometry.attributes.position.setY( i, heightData[ i ] );
-
-			}
-
-			geometry.computeVertexNormals();
-
-			const groundShape = createTerrainShape( heightData );
-			var groundTransform = new Ammo.btTransform();
-			groundTransform.setIdentity();
-			// Shifts the terrain, since bullet re-centers it on its bounding box.
-			groundTransform.setOrigin( new Ammo.btVector3( 0, ( terrainMaxHeight + terrainMinHeight ), 0 ) );
-			var groundMass = 0;
-			var groundLocalInertia = new Ammo.btVector3( 0, 0, 0 );
-			var groundMotionState = new Ammo.btDefaultMotionState( groundTransform );
-			var groundBody = new Ammo.btRigidBody( new Ammo.btRigidBodyConstructionInfo( groundMass, groundMotionState, groundShape, groundLocalInertia ) );
-
-			return groundBody;
-
-
-			// this.isReady = true;
-
-		}
-
-		const groundBody = createTerrain( terrainData.heightData );
-		this.physicsWorld.addRigidBody( groundBody );
+		const terrain = new TerrainPhysics( Ammo, terrainData );
+		this.physicsWorld.addRigidBody( terrain.body );
 
 		const vehicle = createVehicle( chassis, wheels );
 		this.physicsWorld.addAction( vehicle );

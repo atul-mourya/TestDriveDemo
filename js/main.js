@@ -1,5 +1,5 @@
 import ImportAssets from './AssetManager';
-import Physics from './physics';
+import Physics from './Physics/physics';
 import {
 	WebGLRenderer,
 	TextureLoader,
