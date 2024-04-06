@@ -34,7 +34,7 @@ function isElement( obj ) {
 
 }
 
-var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) {
+var TestDrive = function ( data, loadingManager, onGameReady ) {
 
 	var _this = this;
 	var container = data.container;
@@ -118,37 +118,21 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		exportScene: true
 	};
 
-	this.initSceneSetup = async function () {
-
-		await _setup();
-		await _init();
-
-	};
-
-	async function _setup() {
-
-		var scriptLoader = new ScriptLoader();
-
-		await scriptLoader.load( data.cdn, scripts );
-
-		console.log( 'scripts are loaded' );
-		_global.clock = new Clock();
-
-	}
-
-	function _init() {
+	this.loadGame = async function ( level, map, type ) {
 
 		Cache.enabled = true;
 
 		_initScene();
 		_initRenderer();
 		_initCamera();
+
 		// _initControls();
-		_initAssetManager();
+		_this.gameData = await _loadGameData( level, map, type );
+		_initAssetManager( _this.gameData );
 
 		_registerEventListeners();
 
-	}
+	};
 
 	function _initScene() {
 
@@ -193,17 +177,17 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 
 	}
 
-	function _initAssetManager() {
+	function _initAssetManager( data ) {
 
 		_global.sceneReady = false;
 
-		const assetManager = new ImportAssets( _this.setting, _this.scene );
+		const assetManager = new ImportAssets( _this.setting, _this.scene, data );
 		assetManager.addEventListener( 'ready', async () => {
 
 			Ammo().then( ( Ammo ) => {
 
 				_global.level = assetManager.level;
-				_this.physics = new Physics( Ammo, assetManager.carBody, assetManager.wheels, _this.camera, assetManager.heightData, onPhysicsReady );
+				_this.physics = new Physics( Ammo, _this.scene, assetManager.carBody, assetManager.wheels, _this.camera, assetManager.heightData, onPhysicsReady );
 
 			} );
 
@@ -219,6 +203,18 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		_startAnimate();
 
 	};
+
+	async function _loadGameData( level, map, type ) {
+
+		const lookups = await fetch( location.href + "resources/models/model_lookups.json" );
+		const lookupData = await lookups.json();
+
+		const response = await fetch( location.href + lookupData.game_type[ type ].url );
+		const levelData = await response.json();
+
+		return { baseCar: lookupData.base_car, levelData: levelData[ level ][ map ] };
+
+	}
 
 	async function _loadEnvironment() {
 
@@ -247,14 +243,14 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 			textureWidth: 1024,
 			textureHeight: 1024
 		} );
-		water.position.y = _global.level.alps.lake.map.seaLevel;
+		water.position.y = _this.gameData.levelData.map.seaLevel;
 		water.rotation.x = - 0.5 * Math.PI;
 		water.name = 'Water';
 		_this.scene.add( water );
 
 		const directionalLight = new DirectionalLight( 0xffffff, 1 * Math.PI );
 		directionalLight.position.set( 1, 1, 1 ).normalize(); // set the direction
-		scene.add( directionalLight );
+		_this.scene.add( directionalLight );
 
 	}
 
@@ -441,113 +437,5 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 	}
 
 };
-
-const TestDrive = function ( data, loadingManager, onGameReady ) {
-
-	var scripts = [
-		// [
-		// 	"/js/vendors/ammo/ammo.js",
-		// ],
-		// [
-		// 	"/js/PostProcessor.js"
-		// ]
-	];
-	AbstractTestDrive.call( this, data, loadingManager, scripts, onGameReady );
-
-};
-
-TestDrive.prototype = Object.create( AbstractTestDrive.prototype );
-TestDrive.prototype.constructor = TestDrive;
-
-
-function ScriptLoader() {
-
-	function _add( basepath, urls, loadingManager ) {
-
-		var promises = [];
-		if ( urls && urls.length > 0 ) {
-
-			for ( var i in urls ) {
-
-				( function ( url ) {
-
-					var promise = new Promise( function ( resolve, reject ) {
-
-						loadingManager && urls && loadingManager.itemStart( url );
-						var script = document.createElement( 'script' );
-						script.src = url;
-
-						script.addEventListener( 'load', function () {
-
-							loadingManager && loadingManager.itemEnd( url );
-							console.log( "Loaded: " + url );
-							resolve( url );
-
-						}, false );
-
-						script.addEventListener( 'error', function () {
-
-							console.log( "Error: " + url );
-							loadingManager && loadingManager.itemEnd( url );
-							reject( url );
-
-						}, false );
-
-						document.body.appendChild( script );
-
-					} );
-
-					promises.push( promise );
-
-				} )( basepath + urls[ i ] );
-
-			}
-
-		}
-
-		return promises;
-
-	}
-
-	this.load = function ( basepath, urls, loadingManager ) {
-
-		var promise = null;
-		basepath = ! basepath ? "" : basepath;
-		if ( urls && urls.length > 0 ) {
-
-			for ( var i in urls ) {
-
-				( function ( basepath, item ) {
-
-					if ( promise ) {
-
-						promise = promise.then( function () {
-
-							console.log( 'loaded' );
-							return Promise.all( _add( basepath, item, loadingManager ) );
-
-						} );
-
-					} else {
-
-						promise = Promise.all( _add( basepath, item, loadingManager ) );
-
-					}
-
-				} )( basepath, urls[ i ] );
-
-			}
-
-		}
-
-		console.log( promise );
-		// loadingManager && urls && loadingManager.itemsStart(urls.length);
-		// var promises = _add(urls,loadingManager);
-		// console.log(promises);
-		return promise;
-
-	};
-
-}
 
 export default TestDrive;

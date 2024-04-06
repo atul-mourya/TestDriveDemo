@@ -22,7 +22,7 @@ function getContextPath() {
 
 class ImportAssets extends EventDispatcher {
 
-	constructor( settings, scene ) {
+	constructor( settings, scene, data ) {
 
 		super();
 		this.carBody = null;
@@ -30,7 +30,8 @@ class ImportAssets extends EventDispatcher {
 		this.storedMaterial = {};
 		this.envMapComponent = [];
 		this.wheels = [];
-		this.level = null;
+		this.level = data.levelData;
+		this.baseCar = data.baseCar;
 		this.reflectionCube = null;
 
 		this.terrainObj = null;
@@ -45,29 +46,25 @@ class ImportAssets extends EventDispatcher {
 
 	async init() {
 
-		const data = await fetch( baseUrl + "/resources/models/model_lookups.json" );
-		const json = await data.json();
 
-		if ( json.data.base_car ) {
+		if ( this.baseCar ) {
 
 			var loadingManager = new LoadingManager();
 
-			await this._loadBaseParts( json.data.base_car, loadingManager ),
-			await this._loadGameData( json.data.game_type, loadingManager ),
-
+			await this._loadBaseParts( this.baseCar, loadingManager ),
 			await this._loadLevel();
 			this.heightData = await this._createHeightField();
 
 			console.log( 'Environment, car and standard parts loaded' );
 
-			this.carBody.position.x = this.level.alps.lake.car.origin[ 0 ];
-			this.carBody.position.y = this.level.alps.lake.car.origin[ 1 ];
-			this.carBody.position.z = this.level.alps.lake.car.origin[ 2 ];
+			this.carBody.position.x = this.level.car.origin[ 0 ];
+			this.carBody.position.y = this.level.car.origin[ 1 ];
+			this.carBody.position.z = this.level.car.origin[ 2 ];
 
-			this.carBody.quaternion.x = this.level.alps.lake.car.orientation[ 0 ];
-			this.carBody.quaternion.y = this.level.alps.lake.car.orientation[ 1 ];
-			this.carBody.quaternion.z = this.level.alps.lake.car.orientation[ 2 ];
-			this.carBody.quaternion.w = this.level.alps.lake.car.orientation[ 3 ];
+			this.carBody.quaternion.x = this.level.car.orientation[ 0 ];
+			this.carBody.quaternion.y = this.level.car.orientation[ 1 ];
+			this.carBody.quaternion.z = this.level.car.orientation[ 2 ];
+			this.carBody.quaternion.w = this.level.car.orientation[ 3 ];
 
 
 			// _this.camera.lookAt(_global.carBody.position);
@@ -95,17 +92,10 @@ class ImportAssets extends EventDispatcher {
 		this.wheels = [];
 
 		var loader = new GLTFLoader( loadManager );
-		const base = await loader.loadAsync( baseUrl + model.url );
+		const base = await loader.loadAsync( location.href + model.url );
 		const data = base.scenes[ 0 ].children[ 0 ];
 
 		this.decomposeParts( data, "Car" );
-
-	}
-
-	async _loadGameData( json ) {
-
-		const data = await fetch( baseUrl + json.events.url );
-		this.level = await data.json();
 
 	}
 
@@ -115,7 +105,7 @@ class ImportAssets extends EventDispatcher {
 		await new Promise( async ( resolve ) => {
 
 			var heightmapImage = new Image();
-			heightmapImage.src = baseUrl + this.level.alps.lake.map.heightMap;
+			heightmapImage.src = location.href + this.level.map.heightMap;
 
 			var sand;
 			var loader = new TextureLoader();
@@ -145,7 +135,7 @@ class ImportAssets extends EventDispatcher {
 				metalness: 0,
 				envMapIntensity: 0,
 			} );
-			const seaLevel = this.level.alps.lake.map.seaLevel;
+			const seaLevel = this.level.map.seaLevel;
 			terrainMaterial = Terrain.generateBlendedMaterial( [
 				{ texture: t1 },
 				{ texture: t2, levels: [ seaLevel, seaLevel + 2, 20, 40 ] },
@@ -160,10 +150,10 @@ class ImportAssets extends EventDispatcher {
 				map: new TextureLoader().load( baseUrl + '/resources/data/events/alps/lake/c.jpg' )
 			} );
 
-			var terrainWidth = scope.level.alps.lake.map.size[ 0 ];
-			var terrainDepth = scope.level.alps.lake.map.size[ 1 ];
-			var terrainMaxHeight = scope.level.alps.lake.map.heightRange[ 0 ];
-			var terrainMinHeight = scope.level.alps.lake.map.heightRange[ 1 ];
+			var terrainWidth = scope.level.map.size[ 0 ];
+			var terrainDepth = scope.level.map.size[ 1 ];
+			var terrainMaxHeight = scope.level.map.heightRange[ 0 ];
+			var terrainMinHeight = scope.level.map.heightRange[ 1 ];
 
 			var o = {
 				xSize: terrainWidth,
@@ -184,7 +174,7 @@ class ImportAssets extends EventDispatcher {
 				material: terrainMaterial,
 
 				//trees spread
-				seaLevel: scope.level.alps.lake.map.seaLevel
+				seaLevel: scope.level.map.seaLevel
 
 			};
 
@@ -232,12 +222,12 @@ class ImportAssets extends EventDispatcher {
 		// await new Promise( ( resolve ) => {
 
 		var heightmapImage = new Image();
-		heightmapImage.src = baseUrl + scope.level.alps.lake.map.heightMap;
+		heightmapImage.src = baseUrl + scope.level.map.heightMap;
 
-		var terrainWidth = scope.level.alps.lake.map.size[ 0 ];
-		var terrainDepth = scope.level.alps.lake.map.size[ 1 ];
-		var terrainMaxHeight = scope.level.alps.lake.map.heightRange[ 0 ];
-		var terrainMinHeight = scope.level.alps.lake.map.heightRange[ 1 ];
+		var terrainWidth = scope.level.map.size[ 0 ];
+		var terrainDepth = scope.level.map.size[ 1 ];
+		var terrainMaxHeight = scope.level.map.heightRange[ 0 ];
+		var terrainMinHeight = scope.level.map.heightRange[ 1 ];
 
 		var params = {
 			xSize: terrainWidth,
@@ -257,7 +247,7 @@ class ImportAssets extends EventDispatcher {
 			useBufferGeometry: false,
 
 			//trees spread
-			seaLevel: scope.level.alps.lake.map.seaLevel,
+			seaLevel: scope.level.map.seaLevel,
 			spread: 0.2,
 			scattering: 'Linear',
 

@@ -12,7 +12,7 @@ var quat = new Quaternion();
 
 class Physics {
 
-	constructor( Ammo, chassis, wheels, camera, terrainData, onPhysicsReady ) {
+	constructor( Ammo, scene, chassis, wheels, camera, terrainData, onPhysicsReady ) {
 
 		const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
 		const dispatcher = new Ammo.btCollisionDispatcher( collisionConfiguration );
@@ -25,6 +25,7 @@ class Physics {
 		this.clock = new Clock();
 		this.camera = camera;
 		this.chassis = chassis;
+		this.scene = scene;
 
 		this.time = 0;
 		this.cameraMode = 3;
@@ -38,7 +39,7 @@ class Physics {
 		this.terrainActor = new TerrainPhysics( Ammo, terrainData );
 		this.physicsWorld.addRigidBody( this.terrainActor.body );
 
-		this.vehicleActor = new VehiclePhysics( Ammo, this.physicsWorld, chassis, wheels );
+		this.vehicleActor = new VehiclePhysics( Ammo, this.physicsWorld, this.scene, chassis, wheels );
 		this.physicsWorld.addRigidBody( this.vehicleActor.body );
 		this.physicsWorld.addAction( this.vehicleActor.vehicle );
 

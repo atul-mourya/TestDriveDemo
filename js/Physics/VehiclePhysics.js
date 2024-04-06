@@ -16,10 +16,11 @@ const BACK_RIGHT = 3;
 
 export default class TerrainPhysics {
 
-	constructor( Ammo, physicsWorld, chassis, wheels, data ) {
+	constructor( Ammo, physicsWorld, scene, chassis, wheels, data ) {
 
 		this.Ammo = Ammo;
 		this.data = data;
+		this.scene = scene;
 
 		const DISABLE_DEACTIVATION = 4;
 
@@ -104,6 +105,7 @@ export default class TerrainPhysics {
 			scope.wheelMeshes[ index ] = scope.createDummyWheelMesh( radius, width, index );
 			var newPos = scope.wheelMeshes[ index ].position;
 			scope.wheelMeshes2[ index ] = scope.createWheelMesh( wheel, index, newPos );
+			scope.scene.add( scope.wheelMeshes2[ index ] );
 
 		}
 
@@ -155,6 +157,7 @@ export default class TerrainPhysics {
 
 
 		this.chassisMesh = this.createChassisMesh( chassis );
+		this.scene.add( this.chassisMesh );
 		// var chassisMesh = createDummyChassisMesh( chassisLength, chassisWidth, chassisHeight );
 
 
@@ -164,7 +167,6 @@ export default class TerrainPhysics {
 
 		chassis.scale.set( 0.01, 0.01, 0.01 );
 		chassis.name = "Original Chassis";
-		scene.add( chassis );
 		// attachCamera(chassis);
 		return chassis;
 
@@ -180,7 +182,7 @@ export default class TerrainPhysics {
 			obj.position.set( pos.x, - 68.5, pos.z );
 
 		} );
-		scene.add( wheel );
+
 		return wheel;
 
 	}

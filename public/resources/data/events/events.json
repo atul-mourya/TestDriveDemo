@@ -8,6 +8,7 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
+                "seaLevel": -30,
                 "heightMap": "/resources/data/events/alps/green/h.png",
                 "smooth": "none",
                 "model": "/resources/data/events/alps/green/model.json"
@@ -25,7 +26,8 @@
                 "heightMap": "/resources/data/events/alps/lake/h.png",
                 "smooth": "none",
                 "model": "/resources/data/events/alps/lake/model.json"
-            }
+            },
+            "level": "/resources/data/events/alps/lake/level.json"
         },
         "mountain": {
             "car":{
@@ -33,11 +35,13 @@
                 "orientation": [0.0015287701971828938, 0.9430171251296997, 0.01606256701052189, 0.33235278725624084]
             },
             "map": {
-                "size": [1000, 1000],
+                "size": [800, 800],
                 "heightRange": [50, -50],
+                "seaLevel": -30,
                 "heightMap": "/resources/data/events/alps/mountain/h.png",
                 "smooth": "none"
-            }
+            },
+            "level": "/resources/data/events/alps/mountain/level.json"
         },
         "rocky": {
             "car":{
@@ -47,6 +51,7 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
+                "seaLevel": -30,
                 "heightMap": "/resources/data/events/alps/rocky/h.png",
                 "smooth": "none"
             }
@@ -59,6 +64,7 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
+                "seaLevel": -13.5,
                 "heightMap": "/resources/data/events/alps/dawn/h.png",
                 "smooth": "none"
             }

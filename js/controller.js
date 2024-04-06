@@ -85,7 +85,7 @@ function _quickPlay() {
 			container: e.settings.container,
 			cdn: baseUrl
 		}, a, onGameReady );
-		r.initSceneSetup(),
+		r.loadGame( 'alps', 'lake', 'events' ),
 		e.visualizer = r;
 		window.scene = e.scene;
 
