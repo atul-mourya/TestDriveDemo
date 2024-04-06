@@ -198,10 +198,14 @@ var AbstractTestDrive = function ( data, loadingManager, scripts, onGameReady ) 
 		_global.sceneReady = false;
 
 		const assetManager = new ImportAssets( _this.setting, _this.scene );
-		assetManager.addEventListener( 'ready', () => {
+		assetManager.addEventListener( 'ready', async () => {
 
-			_global.level = assetManager.level;
-			_this.physics = new Physics( assetManager.envMeshes, assetManager.carBody, assetManager.wheels, _this.camera, assetManager.heightData, onPhysicsReady );
+			Ammo().then( ( Ammo ) => {
+
+				_global.level = assetManager.level;
+				_this.physics = new Physics( Ammo, assetManager.carBody, assetManager.wheels, _this.camera, assetManager.heightData, onPhysicsReady );
+
+			} );
 
 		} );
 

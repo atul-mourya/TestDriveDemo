@@ -4,32 +4,21 @@ import {
 	Clock,
 	Vector3,
 	Object3D,
-	BoxGeometry,
 	CylinderGeometry,
 	Mesh,
 	PlaneGeometry
 } from 'three';
 
-var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhysicsReady ) {
+var vec3 = new Vector3();
+var quat = new Quaternion();
 
-	window.wheels = wheels;
-	const _this = this;
-	Ammo().then( function ( Ammo ) {
+class Physics {
+
+	constructor( Ammo, chassis, wheels, camera, terrainData, onPhysicsReady ) {
 
 		var DISABLE_DEACTIVATION = 4;
-		var TRANSFORM_AUX = new Ammo.btTransform();
-		var ZERO_QUATERNION = new Quaternion( 0, 0, 0, 1 );
 
-		var materialDynamic = new MeshPhongMaterial( {
-			color: 0xfca400
-		} );
-		var materialStatic = new MeshPhongMaterial( {
-			color: 0x999999,
-			opacity: 0.1
-		} );
-		var materialInteractive = new MeshPhongMaterial( {
-			color: 0x990000
-		} );
+		var materialInteractive = new MeshPhongMaterial( { color: 0x990000 } );
 
 		var terrainWidth = terrainData.terrainWidth;
 		var terrainDepth = terrainData.terrainDepth;
@@ -38,24 +27,21 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		var ammoHeightData = null;
 
-		var clock = new Clock();
+		this.clock = new Clock();
+		this.camera = camera;
+		this.chassis = chassis;
+		this.body = null; // Ammo.btRigidBody
 
-		// Physics variables
-		var collisionConfiguration;
-		var dispatcher;
-		var broadphase;
-		var solver;
-		var physicsWorld;
+		// Physics configuration
+		const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+		const dispatcher = new Ammo.btCollisionDispatcher( collisionConfiguration );
+		const broadphase = new Ammo.btDbvtBroadphase();
+		const solver = new Ammo.btSequentialImpulseConstraintSolver();
+		this.physicsWorld = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration );
+		this.physicsWorld.setGravity( new Ammo.btVector3( 0, - 9.75, 0 ) );
 
-		var syncList = [];
-		var time = 0;
-		var objectTimePeriod = 3;
-		var timeNextSpawn = time + objectTimePeriod;
-		var maxNumObjects = 30;
-
-		var _global = {
-			testMe: {}
-		};
+		this.syncList = [];
+		this.time = 0;
 
 		// Keybord actions
 		var actions = {};
@@ -72,112 +58,12 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 		speedometer.style.left = '0px';
 		document.body.appendChild( speedometer );
 
-		function initGraphics() {
+		this.cameraMode = 3;
+		this.chaseCamMount = new Object3D();
+		this.chaseCamMount.position.set( 0, 400, - 1000 );
+		this.needsReset = false;
 
-			window.addEventListener( 'keydown', keydown );
-			window.addEventListener( 'keyup', keyup );
-
-		}
-
-
-		function initPhysics() {
-
-			// Physics configuration
-			collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-			dispatcher = new Ammo.btCollisionDispatcher( collisionConfiguration );
-			broadphase = new Ammo.btDbvtBroadphase();
-			solver = new Ammo.btSequentialImpulseConstraintSolver();
-			physicsWorld = new Ammo.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration );
-			physicsWorld.setGravity( new Ammo.btVector3( 0, - 9.75, 0 ) );
-
-		}
-
-		window.camera = camera;
-		window.chassis = chassis;
-
-		_this.cameraMode = 3;
-
-		var temp = new Vector3();
-		var goal = new Object3D();
-		goal.position.set( 0, 400, - 1000 );
-		var rotationQuaternion = new Quaternion();
-
-		function updateCamera() {
-
-			switch ( _this.cameraMode ) {
-
-				case 0:
-					temp.copy( chassis.position );
-					camera.position.lerp( temp, 0.2 );
-					camera.lookAt( chassis.position.x, chassis.position.y, chassis.position.z - 20 );
-					break;
-				case 1:
-
-					camera.quaternion.copy( chassis.quaternion );
-					rotationQuaternion.setFromAxisAngle( temp.set( 0, 1, 0 ), Math.PI );
-					camera.quaternion.multiply( rotationQuaternion );
-					camera.position.copy( chassis.position ).add( temp.set( - 0.7, 2, 1 ) );
-
-					break;
-				case 2:
-					camera.position.set( chassis.position.x + 20, chassis.position.y + 6, chassis.position.z );
-					camera.lookAt( chassis.position );
-					break;
-				case 3:
-					temp.setFromMatrixPosition( goal.matrixWorld );
-					camera.position.lerp( temp, 0.05 );
-					camera.lookAt( chassis.position );
-					break;
-
-			}
-
-		}
-
-		_this.reset = function () {
-
-			var px = chassis.position.x;
-			var py = chassis.position.y;
-			var pz = chassis.position.z;
-
-			var ry = _global.testMe.bodyPos.getRotation().y();
-			var rw = _global.testMe.bodyPos.getRotation().w();
-
-			var transform = new Ammo.btTransform();
-			transform.setIdentity();
-			transform.setOrigin( new Ammo.btVector3( px, py + 2, pz ) );
-			transform.setRotation( new Ammo.btQuaternion( 0, ry, 0, rw ) );
-
-			_global.body.setWorldTransform( transform );
-
-		};
-
-		_this.needsReset = false;
-
-		let i = 0;
-		let dt = clock.getDelta();
-		_this.update = function () {
-
-			if ( ! _this.needsReset ) {
-
-				dt = clock.getDelta();
-				for ( i = 0; i < syncList.length; i ++ ) {
-
-					syncList[ i ]( dt );
-
-				}
-
-				physicsWorld.stepSimulation( dt, 1 );
-				updateCamera();
-				time += dt;
-
-			} else {
-
-				_this.reset();
-				_this.needsReset = false;
-
-			}
-
-		};
+		const scope = this;
 
 		function keyup( e ) {
 
@@ -274,32 +160,30 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 			// Chassis
 			var geometry = new Ammo.btBoxShape( new Ammo.btVector3( chassisWidth * 0.5, chassisHeight * 0.5, chassisLength * 0.5 ) );
-			var transform = new Ammo.btTransform();
-			transform.setIdentity();
-			transform.setOrigin( new Ammo.btVector3( chassis.position.x, chassis.position.y + 10, chassis.position.z ) );
-			_global.testMe.bodyPos = transform;
-			transform.setRotation( new Ammo.btQuaternion( chassis.quaternion.x, chassis.quaternion.y, chassis.quaternion.z, chassis.quaternion.w ) );
-			var motionState = new Ammo.btDefaultMotionState( transform );
+			scope.vehicleTransform = new Ammo.btTransform();
+			scope.vehicleTransform.setIdentity();
+			scope.vehicleTransform.setOrigin( new Ammo.btVector3( chassis.position.x, chassis.position.y + 10, chassis.position.z ) );
+			scope.vehicleTransform.setRotation( new Ammo.btQuaternion( chassis.quaternion.x, chassis.quaternion.y, chassis.quaternion.z, chassis.quaternion.w ) );
+
+			var motionState = new Ammo.btDefaultMotionState( scope.vehicleTransform );
 			var localInertia = new Ammo.btVector3( 0, 0, 0 );
 			geometry.calculateLocalInertia( massVehicle, localInertia );
-			var body = new Ammo.btRigidBody( new Ammo.btRigidBodyConstructionInfo( massVehicle, motionState, geometry, localInertia ) );
-			body.setActivationState( DISABLE_DEACTIVATION );
-			physicsWorld.addRigidBody( body );
+
+			scope.body = new Ammo.btRigidBody( new Ammo.btRigidBodyConstructionInfo( massVehicle, motionState, geometry, localInertia ) );
+			scope.body.setActivationState( DISABLE_DEACTIVATION );
+			scope.physicsWorld.addRigidBody( scope.body );
+
 			var chassisMesh = createChassisMesh();
 			// var chassisMesh = createDummyChassisMesh( chassisLength, chassisWidth, chassisHeight );
-
-			_global.body = body;
-
 
 			// Raycast Vehicle
 			var engineForce = 0;
 			var vehicleSteering = 0;
 			var breakingForce = 0;
 			var tuning = new Ammo.btVehicleTuning();
-			var rayCaster = new Ammo.btDefaultVehicleRaycaster( physicsWorld );
-			var vehicle = new Ammo.btRaycastVehicle( tuning, body, rayCaster );
+			var rayCaster = new Ammo.btDefaultVehicleRaycaster( scope.physicsWorld );
+			var vehicle = new Ammo.btRaycastVehicle( tuning, scope.body, rayCaster );
 			vehicle.setCoordinateSystem( 0, 1, 2 );
-			physicsWorld.addAction( vehicle );
 
 			var FRONT_LEFT = 0;
 			var FRONT_RIGHT = 1;
@@ -343,7 +227,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			var n = vehicle.getNumWheels();
 
 			// Sync keybord actions and physics and graphics
-			function sync() {
+			function onUpdate() {
 
 				speed = vehicle.getCurrentSpeedKmHour();
 				speedometer.innerHTML = ( speed < 0 ? '(R) ' : '' ) + Math.abs( speed ).toFixed( 1 ) + ' km/h';
@@ -427,21 +311,14 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 			}
 
-			chassis.add( goal );
+			chassis.add( scope.chaseCamMount );
 
-			syncList.push( sync );
+			scope.syncList.push( onUpdate );
+
+			return vehicle;
+
 
 		}
-
-		function createObjects() {
-
-			// createPlane(new THREE.Vector3(0, -5, 0), ZERO_QUATERNION, 1000, 0.01, 1000, 0, 2);
-			createVehicle( chassis, wheels );
-			_this.isReady = true;
-
-		}
-
-
 
 		// source sin fuction plane ammojs git
 		function createTerrainShape( heightData ) {
@@ -508,7 +385,7 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 
 		}
 
-		function initTerrain( heightData ) {
+		function createTerrain( heightData ) {
 
 			var geometry = new PlaneGeometry( terrainWidth, terrainWidth, terrainWidth - 1, terrainWidth - 1 );
 			geometry.rotateX( - Math.PI / 2 );
@@ -530,27 +407,97 @@ var Physics = function ( trackObjs, chassis, wheels, camera, terrainData, onPhys
 			var groundLocalInertia = new Ammo.btVector3( 0, 0, 0 );
 			var groundMotionState = new Ammo.btDefaultMotionState( groundTransform );
 			var groundBody = new Ammo.btRigidBody( new Ammo.btRigidBodyConstructionInfo( groundMass, groundMotionState, groundShape, groundLocalInertia ) );
-			physicsWorld.addRigidBody( groundBody );
+
+			return groundBody;
 
 
-			// _this.isReady = true;
+			// this.isReady = true;
 
 		}
 
+		const groundBody = createTerrain( terrainData.heightData );
+		this.physicsWorld.addRigidBody( groundBody );
 
-		// - Init -
-		initGraphics();
+		const vehicle = createVehicle( chassis, wheels );
+		this.physicsWorld.addAction( vehicle );
 
-		initPhysics();
-		initTerrain( terrainData.heightData );
+		window.addEventListener( 'keydown', keydown );
+		window.addEventListener( 'keyup', keyup );
 
-		createObjects();
+		this.isReady = true;
 		onPhysicsReady && onPhysicsReady();
-		// _updatePhysics();
 
-	} );
+	}
 
-};
+	updateCamera() {
+
+		switch ( this.cameraMode ) {
+
+			case 0:
+				vec3.copy( this.chassis.position );
+				this.camera.position.lerp( vec3, 0.2 );
+				this.camera.lookAt( this.chassis.position.x, this.chassis.position.y, this.chassis.position.z - 20 );
+				break;
+			case 1:
+
+				this.camera.quaternion.copy( this.chassis.quaternion );
+				quat.setFromAxisAngle( vec3.set( 0, 1, 0 ), Math.PI );
+				this.camera.quaternion.multiply( quat );
+				this.camera.position.copy( this.chassis.position ).add( vec3.set( - 0.7, 2, 1 ) );
+
+				break;
+			case 2:
+				this.camera.position.set( this.chassis.position.x + 20, this.chassis.position.y + 6, this.chassis.position.z );
+				this.camera.lookAt( this.chassis.position );
+				break;
+			case 3:
+				vec3.setFromMatrixPosition( this.chaseCamMount.matrixWorld );
+				this.camera.position.lerp( vec3, 0.05 );
+				this.camera.lookAt( this.chassis.position );
+				break;
+
+		}
+
+	}
+
+	reset() {
+
+		var ry = this.vehicleTransform.getRotation().y();
+		var rw = this.vehicleTransform.getRotation().w();
+
+		this.vehicleTransform.setIdentity();
+		this.vehicleTransform.setOrigin( new Ammo.btVector3( this.chassis.position.x, this.chassis.position.y + 2, this.chassis.position.z ) );
+		this.vehicleTransform.setRotation( new Ammo.btQuaternion( 0, ry, 0, rw ) );
+
+		this.body.setWorldTransform( this.vehicleTransform );
+
+	}
+
+	update() {
+
+		if ( ! this.needsReset ) {
+
+			let dt = this.clock.getDelta();
+			for ( let i = 0; i < this.syncList.length; i ++ ) {
+
+				this.syncList[ i ]( dt );
+
+			}
+
+			this.physicsWorld.stepSimulation( dt, 1 );
+			this.updateCamera();
+			this.time += dt;
+
+		} else {
+
+			this.reset();
+			this.needsReset = false;
+
+		}
+
+	}
+
+}
 
 export default Physics;
 
