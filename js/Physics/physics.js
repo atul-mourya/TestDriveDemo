@@ -90,7 +90,7 @@ class Physics {
 
 			let dt = this.clock.getDelta();
 			this.vehicleActor.update( dt );
-			this.physicsWorld.stepSimulation( dt, 1 );
+			this.physicsWorld.stepSimulation( dt, 10 );
 			this.updateCamera();
 			this.time += dt;
 
