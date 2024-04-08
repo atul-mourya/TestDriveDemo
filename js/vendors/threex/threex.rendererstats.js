@@ -46,7 +46,7 @@ const RendererStats	= function () {
 		update: function ( webGLRenderer ) {
 
 			// sanity check
-			console.assert( webGLRenderer instanceof THREE.WebGLRenderer );
+			console.assert( webGLRenderer.isWebGLRenderer );
 
 			// refresh only 30time per second
 			if ( Date.now() - lastTime < 1000 / 30 )	return;
@@ -54,15 +54,13 @@ const RendererStats	= function () {
 
 			var i	= 0;
 			msTexts[ i ++ ].textContent = "== Memory =====";
-			msTexts[ i ++ ].textContent = "Programs: "	+ webGLRenderer.info.memory.programs;
 			msTexts[ i ++ ].textContent = "Geometries: " + webGLRenderer.info.memory.geometries;
 			msTexts[ i ++ ].textContent = "Textures: "	+ webGLRenderer.info.memory.textures;
 
 			msTexts[ i ++ ].textContent = "== Render =====";
 			msTexts[ i ++ ].textContent = "Calls: "	+ webGLRenderer.info.render.calls;
-			msTexts[ i ++ ].textContent = "Vertices: "	+ webGLRenderer.info.render.vertices;
-			msTexts[ i ++ ].textContent = "Faces: "	+ webGLRenderer.info.render.faces;
-			msTexts[ i ++ ].textContent = "Points: "	+ webGLRenderer.info.render.points;
+			msTexts[ i ++ ].textContent = "triangles: "	+ webGLRenderer.info.render.faces;
+			msTexts[ i ++ ].textContent = "Programs: "	+ webGLRenderer.info.memory.programs;
 
 		}
 	};

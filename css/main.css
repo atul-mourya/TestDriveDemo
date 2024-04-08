@@ -6,6 +6,12 @@
     width: 100%;
     display: none;
 }
+#info {
+    position: absolute;
+    z-index: 1;
+    text-align: center;
+    width: 100%;
+}
 #main-menu{
     position: absolute;
     height: 100%;

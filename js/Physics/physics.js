@@ -9,6 +9,7 @@ import VehiclePhysics from './VehiclePhysics';
 
 var vec3 = new Vector3();
 var quat = new Quaternion();
+let dt = null;
 
 class Physics {
 
@@ -89,7 +90,7 @@ class Physics {
 
 		if ( ! this.needsReset ) {
 
-			let dt = this.clock.getDelta();
+			dt = this.clock.getDelta();
 			this.vehicleActor.update( dt );
 			this.physicsWorld.stepSimulation( dt, 1 );
 			this.updateCamera();

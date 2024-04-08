@@ -7,6 +7,6 @@
 		"track1": "/resources/models/environments/01/racetrack01.json"
 	},
 	"base_car": {
-			"url": "/resources/models/cars/ferrari_california/ferrari_california.glb"
+			"url": "./resources/models/cars/ferrari_california/ferrari_california.glb"
 		}
   }

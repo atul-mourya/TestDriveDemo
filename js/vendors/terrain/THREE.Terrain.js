@@ -1,4 +1,14 @@
-import * as THREE from 'three';
+// import * as THREE from 'three';
+import {
+	MeshBasicMaterial,
+	Object3D,
+	Mesh,
+	PlaneGeometry,
+	BufferGeometry,
+	RepeatWrapping,
+	MeshLambertMaterial,
+	Vector3,
+} from 'three';
 
 /**
  * Terrain.js 1.6.0-20180415
@@ -345,11 +355,11 @@ const Terrain = function ( options ) {
 
 	}
 
-	options.material = options.material || new THREE.MeshBasicMaterial( { color: 0xee6633 } );
+	options.material = options.material || new MeshBasicMaterial( { color: 0xee6633 } );
 
 	// Encapsulating the terrain in a parent object allows us the flexibility
 	// to more easily have multiple meshes for optimization purposes.
-	var scene = new THREE.Object3D();
+	var scene = new Object3D();
 	// Planes are initialized on the XY plane, so rotate the plane to make it lie flat.
 	scene.rotation.x = - 0.5 * Math.PI;
 
@@ -371,8 +381,8 @@ const Terrain = function ( options ) {
 
 	} else {
 
-		mesh = new THREE.Mesh(
-			new THREE.PlaneGeometry( options.xSize, options.ySize, options.xSegments, options.ySegments ),
+		mesh = new Mesh(
+			new PlaneGeometry( options.xSize, options.ySize, options.xSegments, options.ySegments ),
 			options.material
 		);
 
@@ -399,7 +409,7 @@ const Terrain = function ( options ) {
 
 	if ( options.useBufferGeometry ) {
 
-		mesh.geometry = ( new THREE.BufferGeometry() ).fromGeometry( mesh.geometry );
+		mesh.geometry = ( new BufferGeometry() ).fromGeometry( mesh.geometry );
 
 	}
 
@@ -755,7 +765,7 @@ Terrain.fromHeightmap = function ( g, options ) {
 	context.drawImage( options.heightmap, 0, 0, canvas.width, canvas.height );
 	var data = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
 
-	const vertex = new THREE.Vector3();
+	const vertex = new Vector3();
 	for ( var row = 0; row < rows; row ++ ) {
 
 		for ( var col = 0; col < cols; col ++ ) {
@@ -2122,7 +2132,7 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
 	for ( var i = 0, l = textures.length; i < l; i ++ ) {
 
 		// Update textures
-		textures[ i ].texture.wrapS = textures[ i ].wrapT = THREE.RepeatWrapping;
+		textures[ i ].texture.wrapS = textures[ i ].wrapT = RepeatWrapping;
 		textures[ i ].texture.needsUpdate = true;
 
 		// Shader fragments
@@ -2178,7 +2188,7 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
             'varying vec3 vPosition;\n' +
             'varying vec3 myNormal;\n';
 
-	var mat = material || new THREE.MeshLambertMaterial();
+	var mat = material || new MeshLambertMaterial();
 	mat.onBeforeCompile = function ( shader ) {
 
 		// Patch vertexShader to setup MyUv, vPosition, and myNormal
@@ -2209,7 +2219,7 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
 /**
  * Scatter a mesh across the terrain.
  *
- * @param {THREE.Geometry} geometry
+ * @param {THREE.BufferGeometry} geometry
  *   The terrain's geometry (or the highest-resolution version of it).
  * @param {Object} options
  *   A map of settings that controls how the meshes are scattered, with the
@@ -2230,7 +2240,7 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
  *     near the edges of clumps, if the randomness function creates clumps.
  *   - `scene`: A `THREE.Object3D` instance to which the scattered meshes will
  *     be added. This is expected to be either a return value of a call to
- *     `Terrain()` or added to that return value; otherwise the position
+ *     `THREE.Terrain()` or added to that return value; otherwise the position
  *     and rotation of the meshes will be wrong.
  *   - `sizeVariance`: The percent by which instances of the mesh can be scaled
  *     up or down when placed on the terrain.
@@ -2239,7 +2249,7 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
  *     returns an array of numbers, where each number is the probability that
  *     a mesh is NOT placed on the corresponding face. Valid values include
  *     `Math.random` and the return value of a call to
- *     `Terrain.ScatterHelper`.
+ *     `THREE.Terrain.ScatterHelper`.
  *   - `maxSlope`: The angle in radians between the normal of a face of the
  *     terrain and the "up" vector above which no mesh will be placed on the
  *     related face. Defaults to ~0.63, which is 36 degrees.
@@ -2252,7 +2262,7 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
  * @return {THREE.Object3D}
  *   An Object3D containing the scattered meshes. This is the value of the
  *   `options.scene` parameter if passed. This is expected to be either a
- *   return value of a call to `Terrain()` or added to that return value;
+ *   return value of a call to `THREE.Terrain()` or added to that return value;
  *   otherwise the position and rotation of the meshes will be wrong.
  */
 Terrain.ScatterMeshes = function ( geometry, options ) {

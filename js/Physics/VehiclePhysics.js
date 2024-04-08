@@ -13,8 +13,9 @@ const FRONT_LEFT = 0;
 const FRONT_RIGHT = 1;
 const BACK_LEFT = 2;
 const BACK_RIGHT = 3;
+let tm, p, q, i;
 
-export default class TerrainPhysics {
+export default class VehiclePhysics {
 
 	constructor( Ammo, physicsWorld, scene, chassis, wheels, data ) {
 
@@ -256,7 +257,6 @@ export default class TerrainPhysics {
 		this.vehicle.setSteeringValue( this.vehicleSteering, FRONT_LEFT );
 		this.vehicle.setSteeringValue( this.vehicleSteering, FRONT_RIGHT );
 
-		let tm, p, q, i;
 		for ( i = 0; i < this.wheelsCount; i ++ ) {
 
 			this.vehicle.updateWheelTransform( i, true );

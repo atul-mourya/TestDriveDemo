@@ -9,6 +9,8 @@ export default class TerrainPhysics {
 		this.heightField = this.generateHeightField( data );
 		this.body = this.generateRigidBody( data, this.heightField );
 
+		this.destroy();
+
 	}
 
 	// source sin fuction plane ammojs git
@@ -107,6 +109,12 @@ export default class TerrainPhysics {
 
 	}
 
+	destroy() {
+
+		this.Ammo._free( this.heightField );
+		this.Ammo._free( this.body );
+
+	}
 
 
 }

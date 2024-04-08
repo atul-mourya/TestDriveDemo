@@ -1,9 +1,10 @@
+'use strict';
+
 import ImportAssets from './AssetManager';
 import Physics from './Physics/physics';
 import {
 	WebGLRenderer,
 	TextureLoader,
-	Clock,
 	Cache,
 	Scene,
 	Color,
@@ -20,62 +21,16 @@ import { Water } from 'three/examples/jsm/objects/Water2';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import RendererStats from './vendors/threex/threex.rendererstats';
 
-function isElement( obj ) {
-
-	try {
-
-		return obj instanceof HTMLElement;
-
-	} catch ( e ) {
-
-		return ( typeof obj === "object" ) && ( obj.nodeType === 1 ) && ( typeof obj.style === "object" ) && ( typeof obj.ownerDocument === "object" );
-
-	}
-
-}
-
-var TestDrive = function ( data, loadingManager, onGameReady ) {
+var TestDrive = function ( data, onGameReady ) {
 
 	var _this = this;
-	var container = data.container;
+	this.container = data.container;
 
 	var _global = {
 		data: data,
-		loadingManager: loadingManager,
-		bodyColoredParts: {},
-		standardParts: {},
-		environmentParts: {},
-		carBody: null,
 		sceneReady: false,
 		ultraHD: false
 	};
-
-	if ( container ) {
-
-		if ( ! isElement( container ) ) {
-
-			this.container = document.getElementById( container );
-			if ( this.container == null ) {
-
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
-				this.container = container;
-
-			}
-
-		} else {
-
-			this.container = container;
-
-		}
-
-	} else {
-
-		container = document.createElement( 'div' );
-		document.body.appendChild( container );
-		this.container = container;
-
-	}
 
 	this.setting = {
 		//screenshot
@@ -98,8 +53,6 @@ var TestDrive = function ( data, loadingManager, onGameReady ) {
 
 		//render engine
 		antialias: true, // antialiasing
-		fogEffectOnCar: false,
-		physicallyCorrectLights: false, // for more realistic lighting at cost of computation
 		toneMappingExposure: 1,
 		fpsLimit: 50, // frame per second
 		enableShadow: false,
@@ -107,9 +60,6 @@ var TestDrive = function ( data, loadingManager, onGameReady ) {
 
 		postprocessing: false,
 
-		// initial control button status
-		nightMode: false, // default night mode switch button status  **rework needed**
-		hasNightMode: false, // need to grab this from database          **rework needed**
 	};
 
 	var tracker = {
@@ -140,7 +90,7 @@ var TestDrive = function ( data, loadingManager, onGameReady ) {
 		_this.scene.name = "Scene";
 		_animateFrame();
 
-		if ( tracker.exportScene == true ) window.scene = _this.scene;
+		// if ( tracker.exportScene == true ) window.scene = _this.scene;
 
 	}
 
@@ -182,12 +132,14 @@ var TestDrive = function ( data, loadingManager, onGameReady ) {
 		_global.sceneReady = false;
 
 		const assetManager = new ImportAssets( _this.setting, _this.scene, data );
+
 		assetManager.addEventListener( 'ready', async () => {
 
 			Ammo().then( ( Ammo ) => {
 
 				_global.level = assetManager.level;
 				_this.physics = new Physics( Ammo, _this.scene, assetManager.carBody, assetManager.wheels, _this.camera, assetManager.heightData, onPhysicsReady );
+				assetManager.heightData = null;
 
 			} );
 
@@ -293,7 +245,7 @@ var TestDrive = function ( data, loadingManager, onGameReady ) {
 			// _this.controls.update();
 			if ( tracker.analysis ) {
 
-				// _this.rendererStats.update( _global.renderer );
+				_this.rendererStats.update( _global.renderer );
 				_this.stats.update();
 
 			}
