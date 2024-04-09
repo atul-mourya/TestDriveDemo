@@ -1,5 +1,5 @@
 import { Object3D, Vector3, Triangle, InstancedMesh, Matrix4, DynamicDrawUsage } from 'three';
-import Terrain from './THREE.Terrain';
+import Terrain from './Terrain';
 
 /**
  * Scatter a mesh across the terrain.

@@ -1,4 +1,4 @@
-import Terrain from "./THREE.Terrain";
+import Terrain from "./Terrain";
 // ( function () {
 
 /**

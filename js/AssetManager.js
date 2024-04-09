@@ -10,7 +10,7 @@ import {
 	LoadingManager
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import Terrain from './vendors/terrain/THREE.Terrain';
+import Terrain from './vendors/terrain/Terrain';
 import { ScatterMeshes } from "./vendors/terrain/Scatter";
 import Gaussian from "./vendors/terrain/gaussian";
 
