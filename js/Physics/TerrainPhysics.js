@@ -9,7 +9,7 @@ export default class TerrainPhysics {
 		this.heightField = this.generateHeightField( data );
 		this.body = this.generateRigidBody( data, this.heightField );
 
-		this.destroy();
+		this.destroy( data );
 
 	}
 
@@ -109,10 +109,11 @@ export default class TerrainPhysics {
 
 	}
 
-	destroy() {
+	destroy( data ) {
 
 		this.Ammo._free( this.heightField );
 		this.Ammo._free( this.body );
+		delete data.heightData; // free memory
 
 	}
 

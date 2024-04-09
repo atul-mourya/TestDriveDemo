@@ -25,3 +25,6 @@ function quickPlay() {
 	game.loadGame( 'alps', 'lake', 'events' );
 
 }
+
+export default quickPlay;
+

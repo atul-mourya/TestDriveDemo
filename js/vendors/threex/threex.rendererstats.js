@@ -59,8 +59,8 @@ const RendererStats	= function () {
 
 			msTexts[ i ++ ].textContent = "== Render =====";
 			msTexts[ i ++ ].textContent = "Calls: "	+ webGLRenderer.info.render.calls;
-			msTexts[ i ++ ].textContent = "triangles: "	+ webGLRenderer.info.render.faces;
-			msTexts[ i ++ ].textContent = "Programs: "	+ webGLRenderer.info.memory.programs;
+			msTexts[ i ++ ].textContent = "triangles: "	+ webGLRenderer.info.render.triangles;
+			msTexts[ i ++ ].textContent = "Programs: "	+ webGLRenderer.info.programs.length;
 
 		}
 	};

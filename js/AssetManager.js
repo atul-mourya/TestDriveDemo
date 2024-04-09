@@ -49,19 +49,6 @@ class ImportAssets extends EventDispatcher {
 		this.carBody.quaternion.z = data.levelData.car.orientation[ 2 ];
 		this.carBody.quaternion.w = data.levelData.car.orientation[ 3 ];
 
-
-		// _this.camera.lookAt(_global.carBody.position);
-		// _this.camera.position.set(-9,8,31);
-		// var passes = [
-		//     {   type: "msaa",
-		//         config:{"sampleLevel":2}
-		//     }
-		// ];
-		// if ( _this.setting.postprocessing && passes.length > 0){
-		//     _global.msaaFilterActive = true;
-		//     _global.postProcessor = new PostProcessingManager( data, _this.scene, _this.camera, _global.renderer, _this.container.clientWidth, _this.container.clientHeight, passes);
-		// }
-
 		this.dispatchEvent( { type: 'ready' } );
 
 	}
@@ -159,7 +146,6 @@ class ImportAssets extends EventDispatcher {
 		this.scene.add( level );
 
 		await this.buildTrees( level, terrainWidth - 1, terrainDepth - 1 );
-
 
 		return level;
 

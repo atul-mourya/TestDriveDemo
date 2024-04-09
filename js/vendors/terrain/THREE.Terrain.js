@@ -405,6 +405,8 @@ const Terrain = function ( options ) {
 
 	}
 
+	console.log( 'Total vertices generated: ' + mesh.geometry.attributes.position.count );
+
 	Terrain.Normalize( mesh, options );
 
 	if ( options.useBufferGeometry ) {

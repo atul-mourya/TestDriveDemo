@@ -20,143 +20,107 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import RendererStats from './vendors/threex/threex.rendererstats';
+import FrameManager from './FrameManager';
 
-var TestDrive = function ( data, onGameReady ) {
+class TestDrive {
 
-	var _this = this;
-	this.container = data.container;
+	constructor( data, onGameReady ) {
 
-	var _global = {
-		data: data,
-		sceneReady: false,
-		ultraHD: false
-	};
+		this.data = data;
+		this.onGameReady = onGameReady;
 
-	this.setting = {
-		//screenshot
-		cameraAngle1: { phi: Math.PI / 2, theta: Math.PI / 4 }, // front corner veiw. It is also the default camera view    **rework needed**
-		cameraAngle2: { phi: Math.PI / 2, theta: Math.PI / 2 }, // side view. To be used for creating snapshot              **rework needed**
-		cameraAngle3: { phi: - Math.PI / 2, theta: - Math.PI / 4 }, // rear corner view. To be used for creating snapshot       **rework needed**
+		this.setting = {
+			//screenshot
+			cameraAngle1: { phi: Math.PI / 2, theta: Math.PI / 4 }, // front corner veiw. It is also the default camera view    **rework needed**
+			cameraAngle2: { phi: Math.PI / 2, theta: Math.PI / 2 }, // side view. To be used for creating snapshot              **rework needed**
+			cameraAngle3: { phi: - Math.PI / 2, theta: - Math.PI / 4 }, // rear corner view. To be used for creating snapshot       **rework needed**
 
-		//initial values
-		ground_clearence: 0, // camera height from ground
-		nearCamLimit: 0, // from car's outer bounding radius
-		farCamLimit: 300, // from car's outer bounding radius
-		extendedFarCamLimit: 200, // for mobile portrait mode screens
-		autoRotateSpeed: 4, // auto rotate speed parameter
-		rotationSensitivity: 0.5,
-		enableDamping: false,
-		userControlledAimation: true, // set true to enable continuos rendering   **rework needed**
+			//initial values
+			ground_clearence: 0, // camera height from ground
+			nearCamLimit: 0, // from car's outer bounding radius
+			farCamLimit: 300, // from car's outer bounding radius
+			extendedFarCamLimit: 200, // for mobile portrait mode screens
+			autoRotateSpeed: 4, // auto rotate speed parameter
+			rotationSensitivity: 0.5,
+			enableDamping: false,
+			userControlledAimation: true, // set true to enable continuos rendering   **rework needed**
 
-		//tween
-		tweenJumpBackDistance: 50, // to be used in effectjs                   **rework needed**
+			//tween
+			tweenJumpBackDistance: 50, // to be used in effectjs                   **rework needed**
 
-		//render engine
-		antialias: true, // antialiasing
-		toneMappingExposure: 1,
-		fpsLimit: 50, // frame per second
-		enableShadow: false,
-		resolution: 0.25,
+			//render engine
+			antialias: true, // antialiasing
+			toneMappingExposure: 1,
+			fpsLimit: 50, // frame per second
+			enableShadow: false,
+			resolution: 0.25,
 
-		postprocessing: false,
+			postprocessing: false,
 
-	};
+		};
 
-	var tracker = {
-		analysis: true,
-		pan: true,
-		exportScene: true
-	};
+		this.tracker = {
+			analysis: true,
+			pan: true,
+			exportScene: true
+		};
 
-	this.loadGame = async function ( level, map, type ) {
+		this.sceneReady = false;
+
+		this.scene = null;
+		this.renderer = null;
+		this.canvas = null;
+		this.camera = null;
+		this.physics = null;
+
+		this.assetManager = null;
+
+		if ( this.tracker.analysis ) this.stats();
+
+	}
+
+	async loadGame( level, map, type ) {
 
 		Cache.enabled = true;
 
-		_initScene();
-		_initRenderer();
-		_initCamera();
+		this.scene = new Scene();
+		if ( this.tracker.exportScene == true ) window.scene = this.scene;
 
-		// _initControls();
-		_this.gameData = await _loadGameData( level, map, type );
-		_initAssetManager( _this.gameData );
-
-		_registerEventListeners();
-
-	};
-
-	function _initScene() {
-
-		_this.scene = new Scene();
-		_this.scene.name = "Scene";
-		_animateFrame();
-
-		// if ( tracker.exportScene == true ) window.scene = _this.scene;
-
-	}
-
-	function _initRenderer() {
-
-		_global.renderer = new WebGLRenderer( {
-			antialias: _this.setting.antialias,
+		this.renderer = new WebGLRenderer( {
+			antialias: this.setting.antialias,
 			alpha: false,
 		} );
 
-		_global.renderer.setPixelRatio( window.devicePixelRatio * _this.setting.resolution );
-		_global.renderer.setClearColor( new Color( 0x000000, 1.0 ) );
+		this.renderer.setPixelRatio( window.devicePixelRatio * this.setting.resolution );
+		this.renderer.setClearColor( new Color( 0x000000, 1.0 ) );
 
-		_global.canvas = _global.renderer.domElement;
-		_global.canvas.style.position = "absolute";
-		_global.canvas.style.top = "0px";
-		_global.canvas.style.zIndex = 0;
-		_global.canvas.height = _this.container.clientHeight;
-		_global.canvas.width = _this.container.clientWidth;
+		this.canvas = this.renderer.domElement;
+		this.data.container.appendChild( this.canvas );
 
-		_global.renderer.setSize( _global.canvas.width, _global.canvas.height );
+		this.camera = new PerspectiveCamera( 45, this.canvas.width / this.canvas.height, 0.1, 5000 );
 
-		_this.container.appendChild( _global.canvas );
+		this.onWindowResize();
 
-		if ( tracker.analysis ) _stats();
+		const gameData = await this.loadGameData( level, map, type );
+		this.loadEnvironment( gameData );
 
-		_stopAnimate();
+		this.assetManager = new ImportAssets( this.setting, this.scene, gameData );
+		this.frameManager = new FrameManager( this.renderer, this.scene, this.camera, {}, {}, {} );
 
-	}
-
-	function _initCamera() {
-
-		_this.camera = new PerspectiveCamera( 45, _global.canvas.width / _global.canvas.height, 0.1, 5000 );
+		this.registerEventListeners();
 
 	}
 
-	function _initAssetManager( data ) {
+	async onPhysicsReady() {
 
-		_global.sceneReady = false;
-
-		const assetManager = new ImportAssets( _this.setting, _this.scene, data );
-
-		assetManager.addEventListener( 'ready', async () => {
-
-			Ammo().then( ( Ammo ) => {
-
-				_global.level = assetManager.level;
-				_this.physics = new Physics( Ammo, _this.scene, assetManager.carBody, assetManager.wheels, _this.camera, assetManager.heightData, onPhysicsReady );
-				assetManager.heightData = null;
-
-			} );
-
-		} );
+		this.onGameReady();
+		this.sceneReady = true;
+		this.frameManager.initAnimateFrame( () => this.render() );
+		this.frameManager.startAnimate();
 
 	}
 
-	var onPhysicsReady = async function () {
-
-		await _loadEnvironment();
-		onGameReady();
-		_this.sceneReady = true;
-		_startAnimate();
-
-	};
-
-	async function _loadGameData( level, map, type ) {
+	async loadGameData( level, map, type ) {
 
 		const lookups = await fetch( location.href + "resources/models/model_lookups.json" );
 		const lookupData = await lookups.json();
@@ -168,23 +132,23 @@ var TestDrive = function ( data, onGameReady ) {
 
 	}
 
-	async function _loadEnvironment() {
+	async loadEnvironment( gameData ) {
 
-		const pmremGenerator = new PMREMGenerator( _global.renderer );
+		const pmremGenerator = new PMREMGenerator( this.renderer );
 		pmremGenerator.compileEquirectangularShader();
 		var rgbe_loader = new RGBELoader();
 		const texture = await rgbe_loader.loadAsync( "./images/cannon_2k.hdr" );
 		texture.colorSpace = LinearSRGBColorSpace;
 		const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
-		_this.scene.environment = envMap;
+		this.scene.environment = envMap;
 		texture.dispose();
 		pmremGenerator.dispose();
 
-		_this.scene.background = _this.scene.environment;
-		_this.scene.environmentIntensity = 1;
+		this.scene.background = this.scene.environment;
+		this.scene.environmentIntensity = 1;
 
-		_global.renderer.toneMapping = ACESFilmicToneMapping;
-		_global.renderer.toneMappingExposure = 0.85;
+		this.renderer.toneMapping = ACESFilmicToneMapping;
+		this.renderer.toneMappingExposure = 0.85;
 
 		const water = new Water( new PlaneGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
 			color: new Color( 0xc7cbc6 ),
@@ -195,162 +159,60 @@ var TestDrive = function ( data, onGameReady ) {
 			textureWidth: 1024,
 			textureHeight: 1024
 		} );
-		water.position.y = _this.gameData.levelData.map.seaLevel;
+		water.position.y = gameData.levelData.map.seaLevel;
 		water.rotation.x = - 0.5 * Math.PI;
 		water.name = 'Water';
-		_this.scene.add( water );
+		this.scene.add( water );
 
 		const directionalLight = new DirectionalLight( 0xffffff, 1 * Math.PI );
-		directionalLight.position.set( 1, 1, 1 ).normalize(); // set the direction
-		_this.scene.add( directionalLight );
+		directionalLight.position.set( 1, 1, 1 ).normalize();
+		this.scene.add( directionalLight );
 
 	}
 
-	function _render() {
+	registerEventListeners() {
 
-		// _this.scene.updateMatrix();
-		// _this.camera.updateProjectionMatrix();
-		if ( _this.physics && _this.physics.isReady ) _this.physics.update();
-		// if(_this.setting.postprocessing && _global.postProcessor && _global.postProcessor.composer && _global.msaaFilterActive ) {
-		//     _global.postProcessor.update();
-		// } else {
-		_global.renderer.render( _this.scene, _this.camera );
-		// }
+		const scope = this;
 
-	}
+		this.assetManager.addEventListener( 'ready', () => Ammo().then( Ammo => scope.initPhysics( Ammo ), false ) );
 
-	function _startAnimate() {
-
-		_global.doAnimate = true;
+		document.addEventListener( 'keypress', e => scope.onKeyPress( e ), false );
+		window.addEventListener( 'resize', () => scope.onWindowResize(), false );
+		window.addEventListener( 'focus', () => scope.frameManager.startAnimate(), false );
+		window.addEventListener( 'blur', () => scope.frameManager.stopAnimate(), false );
 
 	}
 
-	function _stopAnimate() {
+	initPhysics( Ammo ) {
 
-		_global.doAnimate = false;
+		this.physics = new Physics(
+			Ammo,
+			this.scene,
+			this.assetManager.carBody,
+			this.assetManager.wheels,
+			this.camera,
+			this.assetManager.heightData,
+			() => this.onPhysicsReady()
+		);
+		this.assetManager.heightData = null;
 
 	}
 
-	function _animateFrame() {
+	render() {
 
-		// setTimeout( function () {
+		if ( this.tracker.analysis ) {
 
-		requestAnimationFrame( _animateFrame );
-
-		// }, 1000 / _this.setting.fpsLimit );
-
-
-		if ( _this.sceneReady && _global.doAnimate == true ) {
-
-			// _this.controls.update();
-			if ( tracker.analysis ) {
-
-				_this.rendererStats.update( _global.renderer );
-				_this.stats.update();
-
-			}
-
-			_render();
+			this.rendererStats.update( this.renderer );
+			this.stats.update();
 
 		}
 
-	}
+		if ( this.physics && this.physics.isReady ) this.physics.update();
 
-	function _refreshRenderFrame() {
-
-		_startAnimate();
-		clearTimeout( _global.canvas.renderFrameTimeoutObj );
-		_global.canvas.renderFrameTimeoutObj = setTimeout( function () {
-
-			_stopAnimate();
-
-		}, 1000 );
 
 	}
 
-	function _registerEventListeners() {
-
-		// var targetWindow = [];
-		// if(window.self !== window.top){
-		//     targetWindow = [window.parent, window];
-		// } else {
-		//     targetWindow = [window];
-		// }
-
-		// targetWindow.forEach(function(element){
-		//     _keyPressEvent(element);
-		// });
-		_keyPressEvent( window );
-
-
-		// window.focus();
-		window.addEventListener( 'resize', _onWindowResize, false );
-
-		// $(window).focus(function() {
-		//     _refreshRenderFrame();
-		// });
-		// $(window).blur(function() {
-		//     _stopAnimate();
-		// });
-
-	}
-
-	function _keyPressEvent( element ) {
-
-		element.addEventListener( 'keypress', function ( event ) {
-
-			var x = event.key;
-			switch ( x ) {
-
-				case "h" || "H":
-					! _global.ultraHD ? _global.ultraHD = true : _global.ultraHD = false;
-					console.warn( 'UltraHD set to ' + _global.ultraHD + '. Performance may reduce if UltraHD is enabled. Toggle by pressing key H' );
-					_this.experimentalHD( _global.ultraHD );
-					break;
-				case "j" || "J":
-					if ( _global.postProcessor ) {
-
-						if ( ! _global.msaaFilterActive ) {
-
-							_this.setting.antialias = false;
-							_recreateRendererContext();
-							_global.postProcessor.composer.renderer = _global.renderer;
-							_refreshRenderFrame();
-							_global.msaaFilterActive = true;
-
-						} else {
-
-							_this.setting.antialias = true;
-							_recreateRendererContext();
-							_global.postProcessor.composer.renderer = _global.renderer;
-							_refreshRenderFrame();
-							_global.msaaFilterActive = false;
-
-						}
-
-						console.warn( 'MSAA Quality set to ' + _global.msaaFilterActive + '. Performance may reduce if MSAA Quality is enabled. Toggle by pressing key J' );
-
-					} else {
-
-						console.warn( "Post Processing is enabled but no passes assigned. Ignoring this event." );
-
-					}
-
-					break;
-				case "c" || "C":
-					_this.physics.cameraMode = _this.physics.cameraMode == 3 ? 0 : _this.physics.cameraMode + 1;
-					break;
-				case "r" || "R":
-					_this.physics.needsReset = true;
-					break;
-
-			}
-
-		} );
-
-	}
-
-	function _recreateRendererContext() {
+	recreateRendererContext() {
 
 		_global.renderer.dispose();
 		_global.renderer.forceContextLoss();
@@ -361,33 +223,47 @@ var TestDrive = function ( data, onGameReady ) {
 
 	}
 
-	function _onWindowResize() {
+	onKeyPress( event ) {
 
-		_global.canvas.height = _this.container.clientHeight;
-		_global.canvas.width = _this.container.clientWidth;
-		_global.postProcessor && _global.postProcessor.composer.setSize( _global.canvas.width, _global.canvas.height );
-		_global.renderer.setSize( _global.canvas.width, _global.canvas.height );
-		_this.camera.aspect = _global.canvas.width / _global.canvas.height;
+		switch ( event.key ) {
 
-		// _refreshRenderFrame();
+			case "c" || "C":
+				this.physics.cameraMode = this.physics.cameraMode == 3 ? 0 : this.physics.cameraMode + 1;
+				break;
+			case "r" || "R":
+				this.physics.needsReset = true;
+				break;
 
-	}
-
-	function _stats() {
-
-		_this.stats = new Stats();
-		_this.stats.dom.style.position = 'absolute';
-		_this.stats.dom.style.top = '0px';
-		_this.stats.dom.style.left = '80px';
-		document.body.appendChild( _this.stats.dom );
-		_this.rendererStats = new RendererStats();
-		_this.rendererStats.domElement.style.position = 'absolute';
-		_this.rendererStats.domElement.style.left = '0px';
-		_this.rendererStats.domElement.style.top = '0px';
-		document.body.appendChild( _this.rendererStats.domElement );
+		}
 
 	}
 
-};
+	onWindowResize() {
+
+		this.canvas.height = this.canvas.parentElement.clientHeight;
+		this.canvas.width = this.canvas.parentElement.clientWidth;
+		this.postProcessor && this.postProcessor.composer.setSize( this.canvas.width, this.canvas.height );
+		this.renderer.setSize( this.canvas.width, this.canvas.height );
+		this.camera.aspect = this.canvas.width / this.canvas.height;
+		this.camera.updateProjectionMatrix();
+
+	}
+
+	stats() {
+
+		this.stats = new Stats();
+		this.stats.dom.style.position = 'absolute';
+		this.stats.dom.style.top = '0px';
+		this.stats.dom.style.left = '80px';
+		document.body.appendChild( this.stats.dom );
+		this.rendererStats = new RendererStats();
+		this.rendererStats.domElement.style.position = 'absolute';
+		this.rendererStats.domElement.style.left = '0px';
+		this.rendererStats.domElement.style.top = '0px';
+		document.body.appendChild( this.rendererStats.domElement );
+
+	}
+
+}
 
 export default TestDrive;
