@@ -50,11 +50,11 @@ class TestDrive {
 			tweenJumpBackDistance: 50, // to be used in effectjs                   **rework needed**
 
 			//render engine
-			antialias: true, // antialiasing
+			antialias: false, // antialiasing
 			toneMappingExposure: 1,
 			fpsLimit: 50, // frame per second
 			enableShadow: false,
-			resolution: 1,
+			resolution: 0.25,
 
 			postprocessing: false,
 
@@ -109,7 +109,7 @@ class TestDrive {
 		this.loadEnvironment( gameData );
 
 		const passes = [
-			{ type: 'smaa', config: {} },
+			// { type: 'smaa', config: {} },
 			{ type: 'n8ao', config: {} }
 		];
 
@@ -121,7 +121,7 @@ class TestDrive {
 			this.canvas.height,
 			passes
 		);
-		this.postProcessor.enabled = true;
+		this.postProcessor.enabled = false;
 
 		this.assetManager = new ImportAssets( this.setting, this.scene, gameData );
 		this.frameManager = new FrameManager( this.renderer, this.scene, this.camera, {}, {}, this.postProcessor );
@@ -263,6 +263,7 @@ class TestDrive {
 		this.canvas.height = this.canvas.parentElement.clientHeight;
 		this.canvas.width = this.canvas.parentElement.clientWidth;
 		this.renderer.setSize( this.canvas.width, this.canvas.height );
+		// this.postProcessor.setSize( this.canvas.width, this.canvas.height );
 		this.camera.aspect = this.canvas.width / this.canvas.height;
 		this.camera.updateProjectionMatrix();
 

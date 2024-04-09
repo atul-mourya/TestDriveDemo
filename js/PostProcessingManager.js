@@ -10,11 +10,7 @@ import {
 	RenderPass,
 	EffectPass,
 	SMAAEffect,
-	SelectiveBloomEffect,
-	OutlineEffect,
-	BlendFunction,
 	SMAAPreset,
-	KernelSize
 } from "postprocessing";
 import { N8AOPostPass } from "n8ao";
 
@@ -54,18 +50,6 @@ class PostProcessingManager {
 					effects.push( pass );
 					break;
 
-				case "bloom":
-					pass = new SelectiveBloomEffect( scene, camera, {
-						blendFunction: BlendFunction[ config.blendFunction ?? 'ADD' ],
-						mipmapBlur: config.mipmapBlur ?? true,
-						luminanceThreshold: config.luminanceThreshold ?? 0.4,
-						luminanceSmoothing: config.luminanceSmoothing ?? 0.2,
-						intensity: config.intensity ?? 3.0
-					} );
-					pass.ignoreBackground = true;
-					effects.push( pass );
-					break;
-
 				case "n8ao":
 					pass = new N8AOPostPass( scene, camera, width, height );
 					pass.configuration.halfRes = config.halfRes ?? false;
@@ -78,20 +62,6 @@ class PostProcessingManager {
 					pass.setQualityMode( config.qualityMode ?? "Low" );
 					this.composer.addPass( pass );
 
-					break;
-
-				case "outline":
-					pass = new OutlineEffect( scene, camera, {
-						blendFunction: BlendFunction[ config.blendFunction ?? 'SCREEN' ],
-						kernelSize: KernelSize[ config.edgeThickness ?? 'VERY_SMALL' ], // Edge thickness
-						edgeStrength: config.edgeStrength ?? 10,
-						visibleEdgeColor: config.visibleEdgeColor ?? 0xff9900,
-						hiddenEdgeColor: config.hiddenEdgeColor ?? 0xffffff,
-						height: config.height ?? 1500, // Also influences edge thickness
-						blur: config.enableBlur ?? true, // Enable blurring
-						xRay: config.xRay ?? true
-					} );
-					effects.push( pass );
 					break;
 
 			}
