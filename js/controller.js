@@ -24,6 +24,8 @@ function quickPlay() {
 	}, onGameReady );
 	game.loadGame( 'alps', 'lake', 'events' );
 
+	// window.game = game;
+
 }
 
 export default quickPlay;

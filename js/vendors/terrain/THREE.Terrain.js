@@ -4,11 +4,10 @@ import {
 	Object3D,
 	Mesh,
 	PlaneGeometry,
-	BufferGeometry,
 	RepeatWrapping,
 	MeshLambertMaterial,
-	Vector3,
 } from 'three';
+import { fromHeightmap } from './images';
 
 /**
  * Terrain.js 1.6.0-20180415
@@ -259,7 +258,7 @@ import {
  *   - `after`: A function to run after other transformations on the terrain
  *     produce the highest-detail heightmap, but before optimizations and
  *     visual properties are applied. Takes two parameters, which are the same
- *     as those for {@link Terrain.DiamondSquare}: an array of
+ *     as those for {@link THREE.Terrain.DiamondSquare}: an array of
  *     `THREE.Vector3` objects representing the vertices of the terrain, and a
  *     map of options with the same available properties as the `options`
  *     parameter for the `Terrain` function.
@@ -307,9 +306,6 @@ import {
  *     `heightmap` property is smaller. Defaults to true.
  *   - `turbulent`: Whether to perform a turbulence transformation. Defaults to
  *     false.
- *   - `useBufferGeometry`: a Boolean indicating whether to use
- *     THREE.BufferGeometry instead of THREE.Geometry for the Terrain plane.
- *     Defaults to `false`.
  *   - `xSegments`: The number of segments (rows) to divide the terrain plane
  *     into. (This basically determines how detailed the terrain is.) Defaults
  *     to 63.
@@ -337,12 +333,10 @@ const Terrain = function ( options ) {
 		steps: 1,
 		stretch: true,
 		turbulent: false,
-		useBufferGeometry: false,
 		xSegments: 63,
 		xSize: 1024,
 		ySegments: 63,
 		ySize: 1024,
-		_mesh: null, // internal only
 	};
 	options = options || {};
 	for ( var opt in defaultOptions ) {
@@ -359,45 +353,25 @@ const Terrain = function ( options ) {
 
 	// Encapsulating the terrain in a parent object allows us the flexibility
 	// to more easily have multiple meshes for optimization purposes.
-	var scene = new Object3D();
+	var object = new Object3D();
 	// Planes are initialized on the XY plane, so rotate the plane to make it lie flat.
-	scene.rotation.x = - 0.5 * Math.PI;
+	object.rotation.x = - 0.5 * Math.PI;
 
 	// Create the terrain mesh.
-	// To save memory, it is possible to re-use a pre-existing mesh.
-	var mesh = options._mesh;
-	if ( mesh && mesh.geometry.type === 'PlaneGeometry' &&
-                mesh.geometry.parameters.widthSegments === options.xSegments &&
-                mesh.geometry.parameters.heightSegments === options.ySegments ) {
-
-		mesh.material = options.material;
-		mesh.scale.x = options.xSize / mesh.geometry.parameters.width;
-		mesh.scale.y = options.ySize / mesh.geometry.parameters.height;
-		for ( var i = 0, l = mesh.geometry.vertices.length; i < l; i ++ ) {
-
-			mesh.geometry.vertices[ i ].z = 0;
-
-		}
-
-	} else {
-
-		mesh = new Mesh(
-			new PlaneGeometry( options.xSize, options.ySize, options.xSegments, options.ySegments ),
-			options.material
-		);
-
-	}
-
-	delete options._mesh; // Remove the reference for GC
+	var mesh = new Mesh(
+		new PlaneGeometry( options.xSize, options.ySize, options.xSegments, options.ySegments ),
+		options.material
+	);
 
 	// Assign elevation data to the terrain plane from a heightmap or function.
+	var zs = Terrain.toArray1D( mesh.geometry.attributes.position.array );
 	if ( options.heightmap instanceof HTMLCanvasElement || options.heightmap instanceof Image ) {
 
-		Terrain.fromHeightmap( mesh.geometry.getAttribute( 'position' ), options );
+		fromHeightmap( zs, options );
 
 	} else if ( typeof options.heightmap === 'function' ) {
 
-		options.heightmap( mesh.geometry.vertices, options );
+		options.heightmap( zs, options );
 
 	} else {
 
@@ -405,20 +379,15 @@ const Terrain = function ( options ) {
 
 	}
 
-	console.log( 'Total vertices generated: ' + mesh.geometry.attributes.position.count );
-
+	Terrain.fromArray1D( mesh.geometry.attributes.position.array, zs );
 	Terrain.Normalize( mesh, options );
 
-	if ( options.useBufferGeometry ) {
+	console.log( "Vertices: ", mesh.geometry.attributes.position.count );
 
-		mesh.geometry = ( new BufferGeometry() ).fromGeometry( mesh.geometry );
+	// lod.addLevel( mesh, options.unit * 10 * Math.pow( 2, lodLevel ) );
 
-	}
-
-	// lod.addLevel(mesh, options.unit * 10 * Math.pow(2, lodLevel));
-	mesh.name = "Terrain Mesh";
-	scene.add( mesh );
-	return scene;
+	object.add( mesh );
+	return object;
 
 };
 
@@ -597,27 +566,24 @@ Terrain.fromArray2D = function ( g, src ) {
 /**
  * Get a 1D array of heightmap values from a 1D array of plane vertices.
  *
- * @param {THREE.Vector3[]} vertices
- *   A 1D array containing the vertices of the plane geometry representing the
- *   terrain, where the z-value of the vertices represent the terrain's
- *   heightmap.
+ * @param {Float32Array} vertices
+ *   A 1D array containing the vertex positions of the geometry representing the
+ *   terrain.
  * @param {Object} options
  *   A map of settings defining properties of the terrain. The only properties
  *   that matter here are `xSegments` and `ySegments`, which represent how many
  *   vertices wide and deep the terrain plane is, respectively (and therefore
  *   also the dimensions of the returned array).
  *
- * @return {Number[]}
+ * @return {Float32Array}
  *   A 1D array representing the terrain's heightmap.
  */
-Terrain.toArray1D = function ( g ) {
+Terrain.toArray1D = function ( vertices ) {
 
-	var positions = g.attributes.position.array;
-	var l = positions.length / 3;
-	var tgt = new Float64Array( l );
-	for ( var i = 0; i < l; i ++ ) {
+	var tgt = new Float32Array( vertices.length / 3 );
+	for ( var i = 0, l = tgt.length; i < l; i ++ ) {
 
-		tgt[ i ] = positions[ i * 3 + 2 ];
+		tgt[ i ] = vertices[ i * 3 + 2 ];
 
 	}
 
@@ -628,18 +594,17 @@ Terrain.toArray1D = function ( g ) {
 /**
  * Set the height of plane vertices from a 1D array of heightmap values.
  *
- * @param {THREE.Vector3[]} vertices
- *   A 1D array containing the vertices of the plane geometry representing the
- *   terrain, where the z-value of the vertices represent the terrain's
- *   heightmap.
+ * @param {Float32Array} vertices
+ *   A 1D array containing the vertex positions of the geometry representing the
+ *   terrain.
  * @param {Number[]} src
  *   A 1D array representing a heightmap to apply to the terrain.
  */
 Terrain.fromArray1D = function ( vertices, src ) {
 
-	for ( var i = 0, l = Math.min( vertices.length, src.length ); i < l; i ++ ) {
+	for ( var i = 0, l = Math.min( vertices.length / 3, src.length ); i < l; i ++ ) {
 
-		vertices[ i ].z = src[ i ];
+		vertices[ i * 3 + 2 ] = src[ i ];
 
 	}
 
@@ -741,109 +706,6 @@ Terrain.EaseInWeak = function ( x ) {
 Terrain.EaseInStrong = function ( x ) {
 
 	return x * x * x * x * x * x * x;
-
-};
-
-/**
- * Convert an image-based heightmap into vertex-based height data.
- *
- * @param {THREE.Vector3[]} g
- *   The vertex array for plane geometry to modify with heightmap data. This
- *   method sets the `z` property of each vertex.
- * @param {Object} options
- *   A map of settings that control how the terrain is constructed and
- *   displayed. Valid values are the same as those for the `options` parameter
- *   of {@link Terrain}().
- */
-Terrain.fromHeightmap = function ( g, options ) {
-
-	var canvas = document.createElement( 'canvas' ),
-		context = canvas.getContext( '2d' ),
-		rows = options.ySegments + 1,
-		cols = options.xSegments + 1,
-		spread = options.maxHeight - options.minHeight;
-	canvas.width = cols;
-	canvas.height = rows;
-	context.drawImage( options.heightmap, 0, 0, canvas.width, canvas.height );
-	var data = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
-
-	const vertex = new Vector3();
-	for ( var row = 0; row < rows; row ++ ) {
-
-		for ( var col = 0; col < cols; col ++ ) {
-
-			var i = row * cols + col, idx = i * 4;
-			vertex.fromBufferAttribute( g, i );
-			vertex.z = ( data[ idx ] + data[ idx + 1 ] + data[ idx + 2 ] ) / 765 * spread + options.minHeight;
-			g.setXYZ( i, vertex.x, vertex.y, vertex.z ); // write coordinates back
-
-		}
-
-	}
-
-};
-
-/**
- * Convert a terrain plane into an image-based heightmap.
- *
- * Parameters are the same as for {@link Terrain.fromHeightmap} except
- * that if `options.heightmap` is a canvas element then the image will be
- * painted onto that canvas; otherwise a new canvas will be created.
- *
- * NOTE: this method performs an operation on an array of vertices, which
- * aren't available when using `BufferGeometry`. So, if you want to use this
- * method, make sure to set the `useBufferGeometry` option to `false` when
- * generating your terrain.
- *
- * @return {HTMLCanvasElement}
- *   A canvas with the relevant heightmap painted on it.
- */
-Terrain.toHeightmap = function ( g, options ) {
-
-	var hasMax = typeof options.maxHeight === 'undefined',
-		hasMin = typeof options.minHeight === 'undefined',
-		max = hasMax ? options.maxHeight : - Infinity,
-		min = hasMin ? options.minHeight : Infinity;
-	if ( ! hasMax || ! hasMin ) {
-
-		var max2 = max,
-			min2 = min;
-		for ( var k = 0, l = g.length; k < l; k ++ ) {
-
-			if ( g[ k ].z > max2 ) max2 = g[ k ].z;
-			if ( g[ k ].z < min2 ) min2 = g[ k ].z;
-
-		}
-
-		if ( ! hasMax ) max = max2;
-		if ( ! hasMin ) min = min2;
-
-	}
-
-	var canvas = options.heightmap instanceof HTMLCanvasElement ? options.heightmap : document.createElement( 'canvas' ),
-		context = canvas.getContext( '2d' ),
-		rows = options.ySegments + 1,
-		cols = options.xSegments + 1,
-		spread = options.maxHeight - options.minHeight;
-	canvas.width = cols;
-	canvas.height = rows;
-	var d = context.createImageData( canvas.width, canvas.height ),
-		data = d.data;
-	for ( var row = 0; row < rows; row ++ ) {
-
-		for ( var col = 0; col < cols; col ++ ) {
-
-			var i = row * cols + col,
-				idx = i * 4;
-			data[ idx ] = data[ idx + 1 ] = data[ idx + 2 ] = Math.round( ( ( g[ i ].z - options.minHeight ) / spread ) * 255 );
-			data[ idx + 3 ] = 255;
-
-		}
-
-	}
-
-	context.putImageData( d, 0, 0 );
-	return canvas;
 
 };
 

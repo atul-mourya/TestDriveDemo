@@ -132,8 +132,6 @@ class ImportAssets extends EventDispatcher {
 			useBufferGeometry: false,
 			material: terrainMaterial,
 
-			seaLevel: data.map.seaLevel
-
 		};
 
 		var level = Terrain( o );
@@ -181,7 +179,7 @@ class ImportAssets extends EventDispatcher {
 	_createHeightField( geometry, data ) {
 
 		return {
-			heightData: Terrain.toArray1D( geometry ),
+			heightData: Terrain.toArray1D( geometry.attributes.position.array ),
 			terrainWidth: data.map.size[ 0 ],
 			terrainDepth: data.map.size[ 1 ],
 			terrainMaxHeight: data.map.heightRange[ 0 ],

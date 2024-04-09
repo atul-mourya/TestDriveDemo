@@ -21,6 +21,7 @@ import { Water } from 'three/examples/jsm/objects/Water2';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import RendererStats from './vendors/threex/threex.rendererstats';
 import FrameManager from './FrameManager';
+import PostProcessingManager from './PostProcessingManager';
 
 class TestDrive {
 
@@ -53,7 +54,7 @@ class TestDrive {
 			toneMappingExposure: 1,
 			fpsLimit: 50, // frame per second
 			enableShadow: false,
-			resolution: 0.25,
+			resolution: 1,
 
 			postprocessing: false,
 
@@ -74,6 +75,7 @@ class TestDrive {
 		this.physics = null;
 
 		this.assetManager = null;
+		this.postProcessor = null;
 
 		if ( this.tracker.analysis ) this.stats();
 
@@ -89,6 +91,10 @@ class TestDrive {
 		this.renderer = new WebGLRenderer( {
 			antialias: this.setting.antialias,
 			alpha: false,
+			logarithmicDepthBuffer: false,
+			powerPreference: "high-performance",
+			stencil: true,
+			depth: true
 		} );
 
 		this.renderer.setPixelRatio( window.devicePixelRatio * this.setting.resolution );
@@ -99,13 +105,26 @@ class TestDrive {
 
 		this.camera = new PerspectiveCamera( 45, this.canvas.width / this.canvas.height, 0.1, 5000 );
 
-		this.onWindowResize();
-
 		const gameData = await this.loadGameData( level, map, type );
 		this.loadEnvironment( gameData );
 
+		const passes = [
+			{ type: 'smaa', config: {} },
+			{ type: 'n8ao', config: {} }
+		];
+
+		this.postProcessor = new PostProcessingManager(
+			this.scene,
+			this.camera,
+			this.renderer,
+			this.canvas.width,
+			this.canvas.height,
+			passes
+		);
+		this.postProcessor.enabled = true;
+
 		this.assetManager = new ImportAssets( this.setting, this.scene, gameData );
-		this.frameManager = new FrameManager( this.renderer, this.scene, this.camera, {}, {}, {} );
+		this.frameManager = new FrameManager( this.renderer, this.scene, this.camera, {}, {}, this.postProcessor );
 
 		this.registerEventListeners();
 
@@ -117,6 +136,7 @@ class TestDrive {
 		this.sceneReady = true;
 		this.frameManager.initAnimateFrame( () => this.render() );
 		this.frameManager.startAnimate();
+		this.onWindowResize();
 
 	}
 
@@ -242,7 +262,6 @@ class TestDrive {
 
 		this.canvas.height = this.canvas.parentElement.clientHeight;
 		this.canvas.width = this.canvas.parentElement.clientWidth;
-		this.postProcessor && this.postProcessor.composer.setSize( this.canvas.width, this.canvas.height );
 		this.renderer.setSize( this.canvas.width, this.canvas.height );
 		this.camera.aspect = this.canvas.width / this.canvas.height;
 		this.camera.updateProjectionMatrix();
