@@ -73,7 +73,7 @@ class ImportAssets extends EventDispatcher {
 		const t2 = await loader.loadAsync( './images/GrassGreenTexture0002.jpg' );
 		const t3 = await loader.loadAsync( './images/rock001.png' );
 		const t4 = await loader.loadAsync( './images/snow1.jpg' );
-		const t5 = await loader.loadAsync( './resources/data/events/alps/lake/road_upscaled.png' );
+		const t5 = await loader.loadAsync( data.map.trackMap );
 
 		t1.wrapS = t1.wrapT = RepeatWrapping;
 		t2.wrapS = t2.wrapT = RepeatWrapping;

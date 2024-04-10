@@ -1,4 +1,4 @@
-import { Object3D, Vector3, Triangle, InstancedMesh, Matrix4, DynamicDrawUsage } from 'three';
+import { Object3D, Vector3, Triangle, InstancedMesh } from 'three';
 import Terrain from './Terrain';
 
 /**
@@ -113,10 +113,6 @@ const ScatterMeshes = function ( geometry, options ) {
 	dummy.rotation.copy( options.mesh.rotation );
 	dummy.scale.copy( options.mesh.scale );
 	dummy.updateMatrix();
-
-	var position = new Vector3();
-	var rotation = new Vector3();
-	var scale = new Vector3();
 
 	var instanceMesh = new InstancedMesh( options.mesh.geometry, options.mesh.material, options.maxMeshes );
 	// instanceMesh.instanceMatrix.setUsage( DynamicDrawUsage ); // will be updated every frame
