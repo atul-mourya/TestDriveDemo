@@ -134,18 +134,17 @@ export const fromFolliageMap = ( g, options ) => {
 	var points = pds.fill();
 	console.log( 'Non-black pixel count:', points );
 
-	// g is the geometry's position attribute.
-	// To all the points obtained from the PoissonDiskSampling, set the z value to the height of the terrain at that point
+	// g is the geometry's position attribute. To all the points obtained from the PoissonDiskSampling, set the z value to the height of the terrain at that point
 	for ( var i = 0; i < points.length; i ++ ) {
 
-		var x = Math.ceil( points[ i ][ 0 ] );
-		var y = Math.ceil( points[ i ][ 1 ] );
+		var x = Math.round( points[ i ][ 0 ] );
+		var y = Math.round( points[ i ][ 1 ] );
 		var idx = ( y * cols + x ) * 3;
 		points[ i ][ 2 ] = g[ idx + 2 ];
 
 	}
 
-	console.log( 'Non-black pixel count:', points );
+	// console.log( 'Non-black pixel count:', points );
 
 	// var canvas = document.createElement( 'canvas' ),
 	// 	context = canvas.getContext( '2d' );
@@ -156,7 +155,7 @@ export const fromFolliageMap = ( g, options ) => {
 
 	// for ( var i = 0; i < points.length - 1; i ++ ) {
 
-	// 	context.fillRect( Math.round( points[ i ][ 0 ] ), Math.round( points[ i ][ 1 ] ), 1, 1 );
+	// 	context.fillRect( Math.round( points[ i ][ 0 ] ), Math.round( points[ i ][ 0 ] ), 1, 1 );
 
 	// }
 
@@ -165,4 +164,17 @@ export const fromFolliageMap = ( g, options ) => {
 	return points;
 
 };
+
+export function loadImageAsync( src ) {
+
+	return new Promise( ( resolve, reject ) => {
+
+	  let img = new Image();
+	  img.onload = () => resolve( img );
+	  img.onerror = reject;
+	  img.src = src;
+
+	} );
+
+}
 
