@@ -22,6 +22,7 @@ import Stats from 'three/examples/jsm/libs/stats.module';
 import RendererStats from './vendors/threex/threex.rendererstats';
 import FrameManager from './FrameManager';
 import PostProcessingManager from './PostProcessingManager';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 class TestDrive {
 
@@ -74,6 +75,8 @@ class TestDrive {
 		this.camera = null;
 		this.physics = null;
 
+		this.orbitControls = null;
+
 		this.assetManager = null;
 		this.postProcessor = null;
 
@@ -104,6 +107,16 @@ class TestDrive {
 		this.data.container.appendChild( this.canvas );
 
 		this.camera = new PerspectiveCamera( 45, this.canvas.width / this.canvas.height, 0.1, 5000 );
+
+		// this.orbitControls = new OrbitControls( this.camera, this.canvas );
+		this.orbitControls = new OrbitControls( this.camera, this.renderer.domElement );
+		this.orbitControls.listenToKeyEvents( window ); // optional
+		this.orbitControls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+		this.orbitControls.dampingFactor = 0.05;
+		this.orbitControls.screenSpacePanning = false;
+		this.orbitControls.minDistance = 100;
+		this.orbitControls.maxDistance = 5000;
+
 
 		const gameData = await this.loadGameData( level, map, type );
 		this.loadEnvironment( gameData );
@@ -227,6 +240,7 @@ class TestDrive {
 
 		}
 
+		// this.orbitControls.update();
 		if ( this.physics && this.physics.isReady ) this.physics.update();
 
 
