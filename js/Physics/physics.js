@@ -75,6 +75,8 @@ class Physics {
 				this.camera.position.lerp( vec3, 0.05 );
 				this.camera.lookAt( this.chassis.position );
 				break;
+			case 4:
+				break;
 
 		}
 

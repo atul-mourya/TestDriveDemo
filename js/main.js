@@ -240,7 +240,7 @@ class TestDrive {
 
 		}
 
-		// this.orbitControls.update();
+		this.orbitControls.update();
 		if ( this.physics && this.physics.isReady ) this.physics.update();
 
 
@@ -262,7 +262,8 @@ class TestDrive {
 		switch ( event.key ) {
 
 			case "c" || "C":
-				this.physics.cameraMode = this.physics.cameraMode == 3 ? 0 : this.physics.cameraMode + 1;
+				this.physics.cameraMode = this.physics.cameraMode == 4 ? 0 : this.physics.cameraMode + 1;
+				this.orbitControls.enabled = this.physics.cameraMode == 4 ? true : false;
 				break;
 			case "r" || "R":
 				this.physics.needsReset = true;
