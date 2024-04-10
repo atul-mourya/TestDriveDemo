@@ -1,3 +1,5 @@
+import PoissonDiskSampling from 'poisson-disk-sampling';
+
 /**
  * Convert an image-based heightmap into vertex-based height data.
  *
@@ -98,3 +100,69 @@ export const toHeightmap = function ( g, options ) {
 	return canvas;
 
 };
+
+export const fromFolliageMap = ( g, options ) => {
+
+	var canvas = document.createElement( 'canvas' );
+	var context = canvas.getContext( '2d' );
+	var rows = options.ySegments;
+	var cols = options.xSegments;
+
+	canvas.width = cols;
+	canvas.height = rows;
+	context.drawImage( options.folliagemap, 0, 0, canvas.width, canvas.height );
+
+	var data = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
+	var pds = new PoissonDiskSampling( {
+		shape: [ cols, rows ],
+		minDistance: 5,
+		maxDistance: 55,
+		tries: 10,
+		distanceFunction: function ( point ) {
+
+			// get the index of the red pixel value for the given coordinates (point)
+			var pixelRedIndex = ( Math.round( point[ 0 ] ) + Math.round( point[ 1 ] ) * cols ) * 4;
+
+			// Invert the pixel value and map it to 0-1, then apply Math.pow for flavor
+			var invertedValue = 1 - data[ pixelRedIndex ] / 255;
+			return Math.pow( invertedValue, 2.7 );
+
+		}
+	} );
+
+
+	var points = pds.fill();
+	console.log( 'Non-black pixel count:', points );
+
+	// g is the geometry's position attribute.
+	// To all the points obtained from the PoissonDiskSampling, set the z value to the height of the terrain at that point
+	for ( var i = 0; i < points.length; i ++ ) {
+
+		var x = Math.ceil( points[ i ][ 0 ] );
+		var y = Math.ceil( points[ i ][ 1 ] );
+		var idx = ( y * cols + x ) * 3;
+		points[ i ][ 2 ] = g[ idx + 2 ];
+
+	}
+
+	console.log( 'Non-black pixel count:', points );
+
+	// var canvas = document.createElement( 'canvas' ),
+	// 	context = canvas.getContext( '2d' );
+
+	// canvas.width = cols;
+	// canvas.height = rows;
+
+
+	// for ( var i = 0; i < points.length - 1; i ++ ) {
+
+	// 	context.fillRect( Math.round( points[ i ][ 0 ] ), Math.round( points[ i ][ 1 ] ), 1, 1 );
+
+	// }
+
+	// document.body.appendChild( canvas );
+
+	return points;
+
+};
+

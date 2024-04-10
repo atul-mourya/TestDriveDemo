@@ -7,12 +7,15 @@ import {
 	MeshStandardMaterial,
 	SRGBColorSpace,
 	Group,
-	LoadingManager
+	LoadingManager,
+	Object3D,
+	InstancedMesh
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/Terrain';
 import { ScatterMeshes } from "./vendors/terrain/Scatter";
 import Gaussian from "./vendors/terrain/gaussian";
+import { fromFolliageMap } from './vendors/terrain/images';
 
 class ImportAssets extends EventDispatcher {
 
@@ -143,36 +146,72 @@ class ImportAssets extends EventDispatcher {
 		level.name = "TerrainVisible";
 		this.scene.add( level );
 
-		await this.buildTrees( level, terrainWidth - 1, terrainDepth - 1 );
+		await this.buildTrees( data, level, terrainWidth, terrainDepth );
 
 		return level;
 
 	}
 
-	async buildTrees( level, width, depth ) {
+	async buildTrees( data, level, width, depth ) {
 
 		const loader = new GLTFLoader();
-		const data = await loader.loadAsync( './resources/models/Folliage/tree.glb' );
-
+		const treeData = await loader.loadAsync( './resources/models/Folliage/tree.glb' );
+		const tree = treeData.scenes[ 0 ].children[ 0 ];
 		var geo = level.children[ 0 ].geometry;
-		const tree = data.scenes[ 0 ].children[ 0 ];
+
+		const folliagemapImage = new Image();
+		folliagemapImage.src = data.map.folliageMap;
+
+		const posAttrib = geo.getAttribute( 'position' ).clone();
+		const options = {
+			xSegments: width,
+			ySegments: depth,
+			folliagemap: folliagemapImage,
+		};
+		const points = fromFolliageMap( posAttrib.array, options );
+
+		const trees = new Object3D();
+		trees.position.x = - width / 2;
+		trees.position.y = - depth / 2;
+		trees.name = "Trees";
+
+		let dummy = tree;
+
+		var instanceMesh = new InstancedMesh( tree.geometry, tree.material, points.length );
+		trees.add( instanceMesh );
+
+		points.forEach( ( point, i ) => {
+
+			var mesh = dummy.clone();
+
+			mesh.position.set( point[ 0 ], point[ 1 ], point[ 2 ] );
+			mesh.rotation.x += 90 / 180 * Math.PI;
+			mesh.updateMatrix();
+
+			instanceMesh.setMatrixAt( i, mesh.matrix );
+
+		} );
+
+		level.add( trees );
+
+
 
 		// Add randomly distributed foliage
-		const params = {
-			w: width,
-			h: depth,
-			mesh: tree,
-			randomness: Math.random,
-			spread: 0.001,
-			smoothSpread: 0,
-			sizeVariance: 0.1,
-			maxSlope: 0.6283185307179586, // 36deg or 36 / 180 * Math.PI, about the angle of repose of earth
-			maxTilt: Infinity,
-			maxMeshes: 1000
-		};
+		// const params = {
+		// 	w: width - 1,
+		// 	h: depth - 1,
+		// 	mesh: tree,
+		// 	randomness: Math.random,
+		// 	spread: 0.001,
+		// 	smoothSpread: 0,
+		// 	sizeVariance: 0.1,
+		// 	maxSlope: 0.6283185307179586, // 36deg or 36 / 180 * Math.PI, about the angle of repose of earth
+		// 	maxTilt: Infinity,
+		// 	maxMeshes: 1000
+		// };
 
-		var trees = ScatterMeshes( geo, params );
-		level.add( trees );
+		// var trees = ScatterMeshes( geo, params );
+		// level.add( trees );
 
 	}
 

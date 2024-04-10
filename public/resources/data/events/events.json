@@ -24,6 +24,8 @@
                 "heightRange": [40, -40],
                 "seaLevel": -13.5,
                 "heightMap": "./resources/data/events/alps/lake/h.png",
+                "folliageMap": "./resources/data/events/alps/lake/f.png",
+                "trackMap": "./resources/data/events/alps/lake/road_upscaled.png",
                 "smooth": "none",
                 "model": "/resources/data/events/alps/lake/model.json"
             },
