@@ -74,7 +74,9 @@ const ScatterMeshes = function ( geometry, options ) {
 		maxTilt: Infinity,
 		w: 0,
 		h: 0,
-		maxMeshes: Infinity
+		maxMeshes: Infinity,
+		seaLevel: 0
+
 	};
 	for ( var opt in defaultOptions ) {
 
@@ -86,16 +88,16 @@ const ScatterMeshes = function ( geometry, options ) {
 
 	}
 
-	var spreadIsNumber = typeof options.spread === 'number',
-		randomHeightmap,
-		randomness,
-		spreadRange = 1 / options.smoothSpread,
-		doubleSizeVariance = options.sizeVariance * 2,
-		vertex1 = new Vector3(),
-		vertex2 = new Vector3(),
-		vertex3 = new Vector3(),
-		faceNormal = new Vector3(),
-		up = options.mesh.up.clone().applyAxisAngle( new Vector3( 1, 0, 0 ), 0.5 * Math.PI );
+	var spreadIsNumber = typeof options.spread === 'number';
+	var randomHeightmap;
+	var randomness;
+	var spreadRange = 1 / options.smoothSpread;
+	var doubleSizeVariance = options.sizeVariance * 2;
+	var vertex1 = new Vector3();
+	var vertex2 = new Vector3();
+	var vertex3 = new Vector3();
+	var faceNormal = new Vector3();
+	var up = options.mesh.up.clone().applyAxisAngle( new Vector3( 1, 0, 0 ), 0.5 * Math.PI );
 	if ( spreadIsNumber ) {
 
 		randomHeightmap = options.randomness();
@@ -108,14 +110,10 @@ const ScatterMeshes = function ( geometry, options ) {
 	}
 
 	var meshCount = 0; // Counter to keep track of generated meshes
-	let dummy = new Object3D();
-	dummy.position.copy( options.mesh.position );
-	dummy.rotation.copy( options.mesh.rotation );
-	dummy.scale.copy( options.mesh.scale );
+	let dummy = options.mesh;
 	dummy.updateMatrix();
 
 	var instanceMesh = new InstancedMesh( options.mesh.geometry, options.mesh.material, options.maxMeshes );
-	// instanceMesh.instanceMatrix.setUsage( DynamicDrawUsage ); // will be updated every frame
 	options.scene.add( instanceMesh );
 
 	geometry = geometry.toNonIndexed();
@@ -168,6 +166,14 @@ const ScatterMeshes = function ( geometry, options ) {
 
 			var mesh = dummy.clone();
 			mesh.position.addVectors( vertex1, vertex2 ).add( vertex3 ).divideScalar( 3 );
+
+			// Don't place a mesh if it's underwater
+			if ( mesh.position.z < options.seaLevel ) {
+
+				continue;
+
+			}
+
 			if ( options.maxTilt > 0 ) {
 
 				var normal = mesh.position.clone().add( faceNormal );
