@@ -203,7 +203,7 @@ export default class VehiclePhysics {
 	update() {
 
 		this.speed = this.vehicle.getCurrentSpeedKmHour();
-		this.speedometer.innerHTML = ( this.speed < 0 ? '(R) ' : '' ) + Math.abs( this.speed ).toFixed( 1 ) + ' km/h';
+		// this.speedometer.innerText = ( this.speed < 0 ? '(R) ' : '' ) + Math.abs( this.speed ).toFixed( 1 ) + ' km/h';
 
 		this.breakingForce = 0;
 		this.engineForce = 0;

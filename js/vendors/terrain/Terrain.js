@@ -382,8 +382,6 @@ const Terrain = function ( options ) {
 	Terrain.fromArray1D( mesh.geometry.attributes.position.array, zs );
 	Terrain.Normalize( mesh, options );
 
-	console.log( "Vertices: ", mesh.geometry.attributes.position.count );
-
 	// lod.addLevel( mesh, options.unit * 10 * Math.pow( 2, lodLevel ) );
 
 	object.add( mesh );
