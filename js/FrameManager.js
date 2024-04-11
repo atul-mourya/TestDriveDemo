@@ -15,6 +15,7 @@ class FrameManager extends EventDispatcher {
 
 		this.scene = scene;
 		this.camera = camera;
+		this.fpsLimit = 30;
 
 		this.startAnimate = () => {
 
@@ -30,23 +31,28 @@ class FrameManager extends EventDispatcher {
 
 			const _animateFrame = () => {
 
-				animationFrameRequestId = requestAnimationFrame( _animateFrame );
-				if ( convergence < MAX_FRAME_CONVERGENCE || doAnimate ) {
+				setTimeout( () => {
 
-					// hudManager.onRenderStart();
-					this.render( callback );
-					// hudManager.onRenderEnd();
+					animationFrameRequestId = requestAnimationFrame( _animateFrame );
+					if ( convergence < MAX_FRAME_CONVERGENCE || doAnimate ) {
 
-				} else if ( convergence == MAX_FRAME_CONVERGENCE ) {
+						// hudManager.onRenderStart();
+						this.render( callback );
+						// hudManager.onRenderEnd();
 
-					// hudManager.onRenderStart();
-					this.renderLastFrame();
-					this.dispatchEvent( { type: LAST_FRAME_RENDERED_EVENT } );
-					// hudManager.onRenderEnd();
+					} else if ( convergence == MAX_FRAME_CONVERGENCE ) {
 
-				}
+						// hudManager.onRenderStart();
+						this.renderLastFrame();
+						this.dispatchEvent( { type: LAST_FRAME_RENDERED_EVENT } );
+						// hudManager.onRenderEnd();
 
-				convergence += 1;
+					}
+
+					convergence += 1;
+
+				}, 1000 / this.fpsLimit );
+
 
 			};
 

@@ -1,14 +1,7 @@
 import { CylinderGeometry, MeshPhongMaterial, Mesh } from 'three';
 
 const materialInteractive = new MeshPhongMaterial( { color: 0x990000 } );
-// Keybord actions
-const actions = {};
-const keysActions = {
-	"KeyW": 'acceleration',
-	"KeyS": 'braking',
-	"KeyA": 'left',
-	"KeyD": 'right'
-};
+
 const FRONT_LEFT = 0;
 const FRONT_RIGHT = 1;
 const BACK_LEFT = 2;
@@ -22,6 +15,8 @@ export default class VehiclePhysics {
 		this.Ammo = Ammo;
 		this.data = data;
 		this.scene = scene;
+		this.actions = {};
+
 
 		const DISABLE_DEACTIVATION = 4;
 
@@ -125,36 +120,11 @@ export default class VehiclePhysics {
 		this.speedometer.style.left = '0px';
 		document.body.appendChild( this.speedometer );
 
-		window.addEventListener( 'keydown', keydown );
-		window.addEventListener( 'keyup', keyup );
+		
 
 		this.isReady = true;
 
-		function keyup( e ) {
-
-			if ( keysActions[ e.code ] ) {
-
-				actions[ keysActions[ e.code ] ] = false;
-				e.preventDefault();
-				e.stopPropagation();
-				return false;
-
-			}
-
-		}
-
-		function keydown( e ) {
-
-			if ( keysActions[ e.code ] ) {
-
-				actions[ keysActions[ e.code ] ] = true;
-				e.preventDefault();
-				e.stopPropagation();
-				return false;
-
-			}
-
-		}
+		
 
 
 		this.chassisMesh = this.createChassisMesh( chassis );
@@ -208,7 +178,7 @@ export default class VehiclePhysics {
 		this.breakingForce = 0;
 		this.engineForce = 0;
 
-		if ( actions.acceleration ) {
+		if ( this.actions.acceleration ) {
 
 			if ( this.speed < - 1 )
 				this.breakingForce = this.maxBreakingForce;
@@ -216,7 +186,7 @@ export default class VehiclePhysics {
 
 		}
 
-		if ( actions.braking ) {
+		if ( this.actions.braking ) {
 
 			if ( this.speed > 1 )
 				this.breakingForce = this.maxBreakingForce;
@@ -224,11 +194,11 @@ export default class VehiclePhysics {
 
 		}
 
-		if ( actions.left ) {
+		if ( this.actions.left ) {
 
 			if ( this.vehicleSteering < this.steeringClamp ) this.vehicleSteering += this.steeringIncrement;
 
-		} else if ( actions.right ) {
+		} else if ( this.actions.right ) {
 
 			if ( this.vehicleSteering > - this.steeringClamp ) this.vehicleSteering -= this.steeringIncrement;
 

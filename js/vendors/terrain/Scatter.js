@@ -74,7 +74,7 @@ const ScatterMeshes = function ( geometry, options ) {
 		maxTilt: Infinity,
 		w: 0,
 		h: 0,
-		maxMeshes: Infinity,
+		maxMeshes: 50000,
 		seaLevel: 0
 
 	};

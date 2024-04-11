@@ -15,6 +15,8 @@ import {
 	PMREMGenerator,
 	ACESFilmicToneMapping,
 	LinearSRGBColorSpace,
+	Vector3,
+	Quaternion
 } from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
@@ -23,6 +25,16 @@ import RendererStats from './vendors/threex/threex.rendererstats';
 import FrameManager from './FrameManager';
 import PostProcessingManager from './PostProcessingManager';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+
+var vec3 = new Vector3();
+var quat = new Quaternion();
+const keysActions = {
+	"KeyW": 'acceleration',
+	"KeyS": 'braking',
+	"KeyA": 'left',
+	"KeyD": 'right'
+};
 
 class TestDrive {
 
@@ -53,11 +65,13 @@ class TestDrive {
 			//render engine
 			antialias: false, // antialiasing
 			toneMappingExposure: 1,
-			fpsLimit: 50, // frame per second
 			enableShadow: false,
 			resolution: 0.25,
 
 			postprocessing: false,
+
+			graphicsFPSLimit: 60, // frame per second
+			physicsFPSLimit: 60, // frame per second
 
 		};
 
@@ -75,6 +89,7 @@ class TestDrive {
 		this.camera = null;
 		this.physics = null;
 
+		this.cameraMode = 3;
 		this.orbitControls = null;
 
 		this.assetManager = null;
@@ -116,6 +131,7 @@ class TestDrive {
 		this.orbitControls.screenSpacePanning = false;
 		this.orbitControls.minDistance = 100;
 		this.orbitControls.maxDistance = 5000;
+		this.orbitControls.zoomToCursor = true;
 
 
 		const gameData = await this.loadGameData( level, map, type );
@@ -134,10 +150,11 @@ class TestDrive {
 			this.canvas.height,
 			passes
 		);
-		this.postProcessor.enabled = false;
+		this.postProcessor.enabled = this.setting.postprocessing;
 
-		this.assetManager = new ImportAssets( this.setting, this.scene, gameData );
+		this.assetManager = new ImportAssets( this.setting, this.camera, this.scene, gameData );
 		this.frameManager = new FrameManager( this.renderer, this.scene, this.camera, {}, {}, this.postProcessor );
+		this.frameManager.fpsLimit = this.setting.graphicsFPSLimit;
 
 		this.registerEventListeners();
 
@@ -149,6 +166,7 @@ class TestDrive {
 		this.sceneReady = true;
 		this.frameManager.initAnimateFrame( () => this.render() );
 		this.frameManager.startAnimate();
+		this.fpsLimit = this.setting.physicsFPSLimit;
 		this.onWindowResize();
 
 	}
@@ -189,8 +207,8 @@ class TestDrive {
 			flowDirection: new Vector2( 0.65, 0.65 ),
 			normalMap0: new TextureLoader().load( './images/Water_1_M_Normal.jpg' ),
 			normalMap1: new TextureLoader().load( './images/Water_2_M_Normal.jpg' ),
-			textureWidth: 1024,
-			textureHeight: 1024
+			textureWidth: 256,
+			textureHeight: 256
 		} );
 		water.position.y = gameData.levelData.map.seaLevel;
 		water.rotation.x = - 0.5 * Math.PI;
@@ -213,6 +231,8 @@ class TestDrive {
 		window.addEventListener( 'resize', () => scope.onWindowResize(), false );
 		window.addEventListener( 'focus', () => scope.frameManager.startAnimate(), false );
 		window.addEventListener( 'blur', () => scope.frameManager.stopAnimate(), false );
+		window.addEventListener( 'keydown', e => scope.keydown( e ), false );
+		window.addEventListener( 'keyup', e => scope.keyup( e ), false );
 
 	}
 
@@ -240,9 +260,45 @@ class TestDrive {
 
 		}
 
-		this.orbitControls.update();
-		if ( this.physics && this.physics.isReady ) this.physics.update();
+		this.cameraMode === 4 ? this.orbitControls.update() : this.updateCamera();
 
+
+		this.stats2.begin();
+		this.physics.update();
+		this.stats2.end();
+
+	}
+
+	updateCamera() {
+
+		switch ( this.cameraMode ) {
+
+			case 0:
+				vec3.copy( this.physics.chassis.position );
+				this.camera.position.lerp( vec3, 0.2 );
+				this.camera.lookAt( this.physics.chassis.position.x, this.physics.chassis.position.y, this.physics.chassis.position.z - 20 );
+				break;
+			case 1:
+
+				this.camera.quaternion.copy( this.physics.chassis.quaternion );
+				quat.setFromAxisAngle( vec3.set( 0, 1, 0 ), Math.PI );
+				this.camera.quaternion.multiply( quat );
+				this.camera.position.copy( this.physics.chassis.position ).add( vec3.set( - 0.7, 2, 1 ) );
+
+				break;
+			case 2:
+				this.camera.position.set( this.physics.chassis.position.x + 20, this.physics.chassis.position.y + 6, this.physics.chassis.position.z );
+				this.camera.lookAt( this.physics.chassis.position );
+				break;
+			case 3:
+				vec3.setFromMatrixPosition( this.physics.chaseCamMount.matrixWorld );
+				this.camera.position.lerp( vec3, 0.05 );
+				this.camera.lookAt( this.physics.chassis.position );
+				break;
+			case 4:
+				break;
+
+		}
 
 	}
 
@@ -262,12 +318,38 @@ class TestDrive {
 		switch ( event.key ) {
 
 			case "c" || "C":
-				this.physics.cameraMode = this.physics.cameraMode == 4 ? 0 : this.physics.cameraMode + 1;
-				this.orbitControls.enabled = this.physics.cameraMode == 4 ? true : false;
+				this.cameraMode = this.cameraMode == 4 ? 0 : this.cameraMode + 1;
+				this.orbitControls.enabled = this.cameraMode == 4 ? true : false;
 				break;
 			case "r" || "R":
 				this.physics.needsReset = true;
 				break;
+
+		}
+
+	}
+
+	keyup( e ) {
+
+		if ( keysActions[ e.code ] ) {
+
+			this.physics.vehicleActor.actions[ keysActions[ e.code ] ] = false;
+			e.preventDefault();
+			e.stopPropagation();
+			return false;
+
+		}
+
+	}
+
+	keydown( e ) {
+
+		if ( keysActions[ e.code ] ) {
+
+			this.physics.vehicleActor.actions[ keysActions[ e.code ] ] = true;
+			e.preventDefault();
+			e.stopPropagation();
+			return false;
 
 		}
 
@@ -291,6 +373,13 @@ class TestDrive {
 		this.stats.dom.style.top = '0px';
 		this.stats.dom.style.left = '80px';
 		document.body.appendChild( this.stats.dom );
+
+		this.stats2 = new Stats();
+		this.stats2.dom.style.position = 'absolute';
+		this.stats2.dom.style.top = '0px';
+		this.stats2.dom.style.left = '160px';
+		document.body.appendChild( this.stats2.dom );
+
 		this.rendererStats = new RendererStats();
 		this.rendererStats.domElement.style.position = 'absolute';
 		this.rendererStats.domElement.style.left = '0px';

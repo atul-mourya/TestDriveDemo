@@ -118,48 +118,75 @@ export const fromFolliageMap = ( g, options ) => {
 		minDistance: 5,
 		maxDistance: 55,
 		tries: 10,
-		distanceFunction: function ( point ) {
+		distanceFunction: function ( pixel ) {
 
 			// get the index of the red pixel value for the given coordinates (point)
-			var pixelRedIndex = ( Math.round( point[ 0 ] ) + Math.round( point[ 1 ] ) * cols ) * 4;
+			var pixelRedIndex = ( Math.round( pixel[ 0 ] ) + Math.round( pixel[ 1 ] ) * cols ) * 4;
 
 			// Invert the pixel value and map it to 0-1, then apply Math.pow for flavor
 			var invertedValue = 1 - data[ pixelRedIndex ] / 255;
-			return Math.pow( invertedValue, 2.7 );
+			return Math.pow( invertedValue, 3 );
 
 		}
 	} );
 
 
 	var points = pds.fill();
-	console.log( 'Non-black pixel count:', points );
 
-	// g is the geometry's position attribute. To all the points obtained from the PoissonDiskSampling, set the z value to the height of the terrain at that point
-	for ( var i = 0; i < points.length; i ++ ) {
-
-		var x = Math.round( points[ i ][ 0 ] );
-		var y = Math.round( points[ i ][ 1 ] );
-		var idx = ( y * cols + x ) * 3;
-		points[ i ][ 2 ] = g[ idx + 2 ];
-
-	}
-
-	// console.log( 'Non-black pixel count:', points );
-
-	// var canvas = document.createElement( 'canvas' ),
-	// 	context = canvas.getContext( '2d' );
-
+	// var canvas = document.createElement( 'canvas' );
+	// var context = canvas.getContext( '2d' );
 	// canvas.width = cols;
 	// canvas.height = rows;
 
-
 	// for ( var i = 0; i < points.length - 1; i ++ ) {
 
-	// 	context.fillRect( Math.round( points[ i ][ 0 ] ), Math.round( points[ i ][ 0 ] ), 1, 1 );
+	// 	context.fillRect( Math.round( points[ i ][ 0 ] ), Math.round( points[ i ][ 1 ] ), 1, 1 );
 
 	// }
 
 	// document.body.appendChild( canvas );
+
+	console.log( 'Non-black pixel count:', points );
+
+	const pVectors = points.map( point => {
+
+		return {
+			x: point[ 0 ] - cols / 2,
+			y: point[ 1 ] - rows / 2,
+			z: 200
+		};
+
+	} );
+
+	return pVectors;
+
+};
+
+export const excludePoints = ( points, options ) => {
+
+	var canvas = document.createElement( 'canvas' );
+	var context = canvas.getContext( '2d' );
+	var rows = options.ySegments;
+	var cols = options.xSegments;
+
+	canvas.width = cols;
+	canvas.height = rows;
+	context.drawImage( options.exclusionmap, 0, 0, canvas.width, canvas.height );
+
+	var data = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
+
+	var alphaThreshold = 200; // value between 0 and 255
+
+	points = points.filter( point => {
+
+		// debugger;
+		// get the index of the alpha pixel value for the given coordinates (point)
+		var pixelAlphaIndex = ( Math.round( point.x + cols / 2 ) + Math.round( point.y + rows / 2 ) * cols ) * 4 + 3;
+
+		// exclude all points for which the alpha channel value is below the threshold
+		return data[ pixelAlphaIndex ] < alphaThreshold;
+
+	} );
 
 	return points;
 

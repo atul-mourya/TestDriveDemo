@@ -27,6 +27,7 @@ class Physics {
 		this.camera = camera;
 		this.chassis = chassis;
 		this.scene = scene;
+		this.fpsLimit = 20;
 
 		this.time = 0;
 		this.cameraMode = 3;
@@ -45,40 +46,18 @@ class Physics {
 		this.physicsWorld.addAction( this.vehicleActor.vehicle );
 
 		this.isReady = true;
+		// this.startSimilation();
 		onPhysicsReady && onPhysicsReady();
 
 	}
 
-	updateCamera() {
+	startSimilation() {
 
-		switch ( this.cameraMode ) {
+		setInterval( () => {
 
-			case 0:
-				vec3.copy( this.chassis.position );
-				this.camera.position.lerp( vec3, 0.2 );
-				this.camera.lookAt( this.chassis.position.x, this.chassis.position.y, this.chassis.position.z - 20 );
-				break;
-			case 1:
+			this.update();
 
-				this.camera.quaternion.copy( this.chassis.quaternion );
-				quat.setFromAxisAngle( vec3.set( 0, 1, 0 ), Math.PI );
-				this.camera.quaternion.multiply( quat );
-				this.camera.position.copy( this.chassis.position ).add( vec3.set( - 0.7, 2, 1 ) );
-
-				break;
-			case 2:
-				this.camera.position.set( this.chassis.position.x + 20, this.chassis.position.y + 6, this.chassis.position.z );
-				this.camera.lookAt( this.chassis.position );
-				break;
-			case 3:
-				vec3.setFromMatrixPosition( this.chaseCamMount.matrixWorld );
-				this.camera.position.lerp( vec3, 0.05 );
-				this.camera.lookAt( this.chassis.position );
-				break;
-			case 4:
-				break;
-
-		}
+		}, 1000 / this.fpsLimit );
 
 	}
 
@@ -95,7 +74,6 @@ class Physics {
 			dt = this.clock.getDelta();
 			this.vehicleActor.update( dt );
 			this.physicsWorld.stepSimulation( dt, 1 );
-			this.updateCamera();
 			this.time += dt;
 
 		} else {

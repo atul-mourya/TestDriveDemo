@@ -8,18 +8,28 @@ import {
 	SRGBColorSpace,
 	Group,
 	LoadingManager,
+	Raycaster,
 	Object3D,
-	InstancedMesh
+	InstancedMesh,
+	OrthographicCamera,
+	BufferGeometry,
+	Mesh,
+	Vector3
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/Terrain';
 import { ScatterMeshes } from "./vendors/terrain/Scatter";
 import Gaussian from "./vendors/terrain/gaussian";
-import { fromFolliageMap } from './vendors/terrain/images';
+import { fromFolliageMap, loadImageAsync, excludePoints } from './vendors/terrain/images';
+import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
+// Add the extension functions
+BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+Mesh.prototype.raycast = acceleratedRaycast;
 
 class ImportAssets extends EventDispatcher {
 
-	constructor( settings, scene, data ) {
+	constructor( settings, camera, scene, data ) {
 
 		super();
 		this.carBody = null;
@@ -28,6 +38,7 @@ class ImportAssets extends EventDispatcher {
 
 		this.settings = settings;
 		this.scene = scene;
+		this.camera = camera;
 
 		this.init( data );
 
@@ -124,17 +135,8 @@ class ImportAssets extends EventDispatcher {
 			ySegments: terrainDepth - 1,
 			maxHeight: terrainMaxHeight,
 			minHeight: terrainMinHeight,
-			easing: Terrain.Linear,
 			heightmap: heightmapImage,
-			smoothing: 'Gaussian (1.0, 11)',
-			optimization: Terrain.POLYGONREDUCTION,
-			frequency: 2.5,
-			steps: 1,
-			stretch: true,
-			turbulent: false,
-			useBufferGeometry: false,
 			material: terrainMaterial,
-
 		};
 
 		var level = Terrain( o );
@@ -144,6 +146,9 @@ class ImportAssets extends EventDispatcher {
 		Terrain.Normalize( level.children[ 0 ], o );
 
 		level.name = "TerrainVisible";
+
+		level.children[ 0 ].geometry.computeBoundsTree( { lazyGeneration: false } );
+
 		this.scene.add( level );
 
 		await this.buildTrees( data, level, terrainWidth, terrainDepth );
@@ -156,23 +161,59 @@ class ImportAssets extends EventDispatcher {
 
 		const loader = new GLTFLoader();
 		const treeData = await loader.loadAsync( './resources/models/Folliage/tree.glb' );
+		const folliagemapImage = await loadImageAsync( data.map.folliageMap );
+		const excludemapImage = await loadImageAsync( data.map.trackMap );
+
 		const tree = treeData.scenes[ 0 ].children[ 0 ];
 		var geo = level.children[ 0 ].geometry;
 
-		const folliagemapImage = new Image();
-		folliagemapImage.src = data.map.folliageMap;
-
-		const posAttrib = geo.getAttribute( 'position' ).clone();
+		const posAttrib = geo.getAttribute( 'position' );
 		const options = {
 			xSegments: width,
 			ySegments: depth,
 			folliagemap: folliagemapImage,
+			exclusionmap: excludemapImage,
 		};
-		const points = fromFolliageMap( posAttrib.array, options );
+		const rawPoints = fromFolliageMap( posAttrib.array, options );
+		// const points = excludePoints( rawPoints, options );
 
+		const raycaster = new Raycaster();
+		const origin = new Vector3();
+		const direction = new Vector3( 0, 0, - 1 );
+		let toBeIncluded = true;
+
+		const points = rawPoints.filter( point => {
+
+			origin.set( point.x, point.y, point.z );
+			raycaster.set( origin, direction );
+			raycaster.firstHitOnly = true;
+			const intersects = raycaster.intersectObject( level.children[ 0 ], true );
+			if ( intersects.length > 0 ) {
+
+				const p = intersects[ 0 ].point;
+				point.z = p.z;
+				toBeIncluded = true;
+
+			}
+
+			if ( point.z < data.map.seaLevel ) {
+
+				toBeIncluded = false;
+
+			} else {
+
+				toBeIncluded = true;
+
+			}
+
+			return toBeIncluded;
+
+		} );
+
+		console.log( 'Points:', points.length );
+
+		const sizeVariance = 0.1;
 		const trees = new Object3D();
-		trees.position.x = - width / 2;
-		trees.position.y = - depth / 2;
 		trees.name = "Trees";
 
 		let dummy = tree;
@@ -184,8 +225,14 @@ class ImportAssets extends EventDispatcher {
 
 			var mesh = dummy.clone();
 
-			mesh.position.set( point[ 0 ], point[ 1 ], point[ 2 ] );
+			mesh.position.set( point.x, point.y, point.z );
 			mesh.rotation.x += 90 / 180 * Math.PI;
+			mesh.rotateY( Math.random() * 2 * Math.PI );
+
+			var variance = Math.random() * ( 2 * sizeVariance ) - sizeVariance;
+			mesh.scale.x = mesh.scale.z = 1 + variance;
+			mesh.scale.y += variance;
+
 			mesh.updateMatrix();
 
 			instanceMesh.setMatrixAt( i, mesh.matrix );
@@ -195,19 +242,31 @@ class ImportAssets extends EventDispatcher {
 		level.add( trees );
 
 
+		// var canvas = document.createElement( 'canvas' );
+		// let context = canvas.getContext( '2d' );
+		// let cols = width;
+		// let rows = depth;
+		// canvas.width = cols;
+		// canvas.height = rows;
+		// context.drawImage( folliagemapImage, 0, 0, canvas.width, canvas.height );
+		// var folliagemapImageData = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
 
-		// Add randomly distributed foliage
+
+		// // Add randomly distributed foliage
+		// // const scope = this;
 		// const params = {
 		// 	w: width - 1,
 		// 	h: depth - 1,
 		// 	mesh: tree,
 		// 	randomness: Math.random,
-		// 	spread: 0.001,
+		// 	spread: ( v, k, fn, ai ) => this.sampler( v, k, points ), //(v, k) { return v.z > 0 && !(k % 4); }
+		// 	// spread: 0.001,
 		// 	smoothSpread: 0,
-		// 	sizeVariance: 0.1,
+		// 	sizeVariance: 0.5,
 		// 	maxSlope: 0.6283185307179586, // 36deg or 36 / 180 * Math.PI, about the angle of repose of earth
 		// 	maxTilt: Infinity,
-		// 	maxMeshes: 1000
+		// 	// maxMeshes: 1000,
+		// 	seaLevel: data.map.seaLevel
 		// };
 
 		// var trees = ScatterMeshes( geo, params );
