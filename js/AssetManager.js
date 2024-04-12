@@ -158,19 +158,23 @@ class ImportAssets extends EventDispatcher {
 		const posAttrib = level.children[ 0 ].geometry.getAttribute( 'position' );
 
 		const blueNoiseSamples = fromFolliageMap( folliagemapImage, width, depth );
-		const points = excludePoints( blueNoiseSamples, maskMap, width, depth );
+		let points = excludePoints( blueNoiseSamples, maskMap, width, depth );
 
-		for ( var i = 0; i < points.length; i ++ ) {
+		points = points.filter( ( point, i ) => {
 
-			var x = Math.round( points[ i ][ 0 ] );
-			var y = Math.round( points[ i ][ 1 ] );
+			var x = Math.round( point[ 0 ] );
+			var y = Math.round( point[ 1 ] );
 			var idx = ( y * width + x ) * 3;
 
-			points[ i ][ 0 ] = posAttrib.array[ idx ];
-			points[ i ][ 1 ] = posAttrib.array[ idx + 1 ];
-			points[ i ][ 2 ] = posAttrib.array[ idx + 2 ];
+			point[ 0 ] = posAttrib.array[ idx ];
+			point[ 1 ] = posAttrib.array[ idx + 1 ];
+			point[ 2 ] = posAttrib.array[ idx + 2 ];
 
-		}
+			if ( point[ 2 ] < data.map.seaLevel ) return false;
+
+			return point;
+
+		} );
 
 		console.log( 'tree points:', points.length );
 

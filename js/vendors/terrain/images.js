@@ -114,9 +114,9 @@ export const fromFolliageMap = ( folliagemap, width, depth ) => {
 
 	var pds = new PoissonDiskSampling( {
 		shape: [ width, depth ],
-		minDistance: 5,
-		maxDistance: 55,
-		tries: 10,
+		minDistance: 3,
+		maxDistance: 30,
+		tries: 50,
 		distanceFunction: function ( pixel ) {
 
 			// get the index of the red pixel value for the given coordinates (point)
