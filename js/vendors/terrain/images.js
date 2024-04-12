@@ -101,27 +101,26 @@ export const toHeightmap = function ( g, options ) {
 
 };
 
-export const fromFolliageMap = ( g, options ) => {
+export const fromFolliageMap = ( folliagemap, width, depth ) => {
 
 	var canvas = document.createElement( 'canvas' );
 	var context = canvas.getContext( '2d' );
-	var rows = options.ySegments;
-	var cols = options.xSegments;
 
-	canvas.width = cols;
-	canvas.height = rows;
-	context.drawImage( options.folliagemap, 0, 0, canvas.width, canvas.height );
+	canvas.width = width;
+	canvas.height = depth;
+	context.drawImage( folliagemap, 0, 0, canvas.width, canvas.height );
 
 	var data = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
+
 	var pds = new PoissonDiskSampling( {
-		shape: [ cols, rows ],
+		shape: [ width, depth ],
 		minDistance: 5,
 		maxDistance: 55,
 		tries: 10,
 		distanceFunction: function ( pixel ) {
 
 			// get the index of the red pixel value for the given coordinates (point)
-			var pixelRedIndex = ( Math.round( pixel[ 0 ] ) + Math.round( pixel[ 1 ] ) * cols ) * 4;
+			var pixelRedIndex = ( Math.round( pixel[ 0 ] ) + Math.round( pixel[ 1 ] ) * width ) * 4;
 
 			// Invert the pixel value and map it to 0-1, then apply Math.pow for flavor
 			var invertedValue = 1 - data[ pixelRedIndex ] / 255;
@@ -132,6 +131,7 @@ export const fromFolliageMap = ( g, options ) => {
 
 
 	var points = pds.fill();
+	console.log( 'Blue Noise sample points:', points );
 
 	// var canvas = document.createElement( 'canvas' );
 	// var context = canvas.getContext( '2d' );
@@ -146,44 +146,28 @@ export const fromFolliageMap = ( g, options ) => {
 
 	// document.body.appendChild( canvas );
 
-	console.log( 'Non-black pixel count:', points );
-
-	const pVectors = points.map( point => {
-
-		return {
-			x: point[ 0 ] - cols / 2,
-			y: point[ 1 ] - rows / 2,
-			z: 200
-		};
-
-	} );
-
-	return pVectors;
+	return points;
 
 };
 
-export const excludePoints = ( points, options ) => {
-
-	var canvas = document.createElement( 'canvas' );
-	var context = canvas.getContext( '2d' );
-	var rows = options.ySegments;
-	var cols = options.xSegments;
-
-	canvas.width = cols;
-	canvas.height = rows;
-	context.drawImage( options.exclusionmap, 0, 0, canvas.width, canvas.height );
-
-	var data = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
+export const excludePoints = ( points, maskMap, width, depth ) => {
 
 	var alphaThreshold = 200; // value between 0 and 255
 
+	var canvas = document.createElement( 'canvas' );
+	var context = canvas.getContext( '2d' );
+
+	canvas.width = width;
+	canvas.height = depth;
+	context.drawImage( maskMap, 0, 0, canvas.width, canvas.height );
+
+	var data = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
+
 	points = points.filter( point => {
 
-		// debugger;
 		// get the index of the alpha pixel value for the given coordinates (point)
-		var pixelAlphaIndex = ( Math.round( point.x + cols / 2 ) + Math.round( point.y + rows / 2 ) * cols ) * 4 + 3;
-
 		// exclude all points for which the alpha channel value is below the threshold
+		var pixelAlphaIndex = ( Math.round( point[ 0 ] ) + Math.round( point[ 1 ] ) * width ) * 4 + 3;
 		return data[ pixelAlphaIndex ] < alphaThreshold;
 
 	} );

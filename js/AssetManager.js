@@ -8,24 +8,15 @@ import {
 	SRGBColorSpace,
 	Group,
 	LoadingManager,
-	Raycaster,
 	Object3D,
 	InstancedMesh,
-	OrthographicCamera,
-	BufferGeometry,
-	Mesh,
-	Vector3
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/Terrain';
-import { ScatterMeshes } from "./vendors/terrain/Scatter";
+// import { ScatterMeshes } from "./vendors/terrain/Scatter";
 import Gaussian from "./vendors/terrain/gaussian";
 import { fromFolliageMap, loadImageAsync, excludePoints } from './vendors/terrain/images';
-import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
-// Add the extension functions
-BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
-BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
-Mesh.prototype.raycast = acceleratedRaycast;
+
 
 class ImportAssets extends EventDispatcher {
 
@@ -147,8 +138,6 @@ class ImportAssets extends EventDispatcher {
 
 		level.name = "TerrainVisible";
 
-		level.children[ 0 ].geometry.computeBoundsTree( { lazyGeneration: false } );
-
 		this.scene.add( level );
 
 		await this.buildTrees( data, level, terrainWidth, terrainDepth );
@@ -162,70 +151,41 @@ class ImportAssets extends EventDispatcher {
 		const loader = new GLTFLoader();
 		const treeData = await loader.loadAsync( './resources/models/Folliage/tree.glb' );
 		const folliagemapImage = await loadImageAsync( data.map.folliageMap );
-		const excludemapImage = await loadImageAsync( data.map.trackMap );
+		const maskMap = await loadImageAsync( data.map.trackMap );
 
 		const tree = treeData.scenes[ 0 ].children[ 0 ];
-		var geo = level.children[ 0 ].geometry;
 
-		const posAttrib = geo.getAttribute( 'position' );
-		const options = {
-			xSegments: width,
-			ySegments: depth,
-			folliagemap: folliagemapImage,
-			exclusionmap: excludemapImage,
-		};
-		const rawPoints = fromFolliageMap( posAttrib.array, options );
-		// const points = excludePoints( rawPoints, options );
+		const posAttrib = level.children[ 0 ].geometry.getAttribute( 'position' );
 
-		const raycaster = new Raycaster();
-		const origin = new Vector3();
-		const direction = new Vector3( 0, 0, - 1 );
-		let toBeIncluded = true;
+		const blueNoiseSamples = fromFolliageMap( folliagemapImage, width, depth );
+		const points = excludePoints( blueNoiseSamples, maskMap, width, depth );
 
-		const points = rawPoints.filter( point => {
+		for ( var i = 0; i < points.length; i ++ ) {
 
-			origin.set( point.x, point.y, point.z );
-			raycaster.set( origin, direction );
-			raycaster.firstHitOnly = true;
-			const intersects = raycaster.intersectObject( level.children[ 0 ], true );
-			if ( intersects.length > 0 ) {
+			var x = Math.round( points[ i ][ 0 ] );
+			var y = Math.round( points[ i ][ 1 ] );
+			var idx = ( y * width + x ) * 3;
 
-				const p = intersects[ 0 ].point;
-				point.z = p.z;
-				toBeIncluded = true;
+			points[ i ][ 0 ] = posAttrib.array[ idx ];
+			points[ i ][ 1 ] = posAttrib.array[ idx + 1 ];
+			points[ i ][ 2 ] = posAttrib.array[ idx + 2 ];
 
-			}
+		}
 
-			if ( point.z < data.map.seaLevel ) {
+		console.log( 'tree points:', points.length );
 
-				toBeIncluded = false;
-
-			} else {
-
-				toBeIncluded = true;
-
-			}
-
-			return toBeIncluded;
-
-		} );
-
-		console.log( 'Points:', points.length );
-
-		const sizeVariance = 0.1;
+		const sizeVariance = 0.5;
 		const trees = new Object3D();
 		trees.name = "Trees";
-
-		let dummy = tree;
 
 		var instanceMesh = new InstancedMesh( tree.geometry, tree.material, points.length );
 		trees.add( instanceMesh );
 
 		points.forEach( ( point, i ) => {
 
-			var mesh = dummy.clone();
+			var mesh = tree.clone();
 
-			mesh.position.set( point.x, point.y, point.z );
+			mesh.position.set( point[ 0 ], point[ 1 ], point[ 2 ] );
 			mesh.rotation.x += 90 / 180 * Math.PI;
 			mesh.rotateY( Math.random() * 2 * Math.PI );
 
@@ -240,17 +200,6 @@ class ImportAssets extends EventDispatcher {
 		} );
 
 		level.add( trees );
-
-
-		// var canvas = document.createElement( 'canvas' );
-		// let context = canvas.getContext( '2d' );
-		// let cols = width;
-		// let rows = depth;
-		// canvas.width = cols;
-		// canvas.height = rows;
-		// context.drawImage( folliagemapImage, 0, 0, canvas.width, canvas.height );
-		// var folliagemapImageData = context.getImageData( 0, 0, canvas.width, canvas.height ).data;
-
 
 		// // Add randomly distributed foliage
 		// // const scope = this;
