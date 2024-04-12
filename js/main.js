@@ -107,12 +107,12 @@ class TestDrive {
 		if ( this.tracker.exportScene == true ) window.scene = this.scene;
 
 		this.renderer = new WebGLRenderer( {
-			antialias: this.setting.antialias,
+			antialias: this.setting.postprocessing ? false : this.setting.antialias,
 			alpha: false,
-			logarithmicDepthBuffer: false,
-			powerPreference: "high-performance",
-			stencil: true,
-			depth: true
+			logarithmicDepthBuffer: this.setting.postprocessing ? false : true,
+			powerPreference: this.setting.postprocessing ? "high-performance" : "default",
+			stencil: this.setting.postprocessing ? false : true,
+			depth: this.setting.postprocessing ? false : true
 		} );
 
 		this.renderer.setPixelRatio( window.devicePixelRatio * this.setting.resolution );
