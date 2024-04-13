@@ -39,20 +39,11 @@ class ImportAssets extends EventDispatcher {
 
 		var loadingManager = new LoadingManager();
 
-		await this._loadBaseParts( data.baseCar, loadingManager );
+		await this._loadBaseParts( data, loadingManager );
 		const terrainObj = await this._loadLevel( data.levelData );
 		this.heightData = await this._createHeightField( terrainObj.children[ 0 ].geometry, data.levelData );
 
 		console.log( 'Environment, car and standard parts loaded' );
-
-		this.carBody.position.x = data.levelData.car.origin[ 0 ];
-		this.carBody.position.y = data.levelData.car.origin[ 1 ];
-		this.carBody.position.z = data.levelData.car.origin[ 2 ];
-
-		this.carBody.quaternion.x = data.levelData.car.orientation[ 0 ];
-		this.carBody.quaternion.y = data.levelData.car.orientation[ 1 ];
-		this.carBody.quaternion.z = data.levelData.car.orientation[ 2 ];
-		this.carBody.quaternion.w = data.levelData.car.orientation[ 3 ];
 
 		this.dispatchEvent( { type: 'ready' } );
 
@@ -61,10 +52,44 @@ class ImportAssets extends EventDispatcher {
 	async _loadBaseParts( model, loadManager ) {
 
 		var loader = new GLTFLoader( loadManager );
-		const base = await loader.loadAsync( model.url );
+		const base = await loader.loadAsync( model.baseCar.url );
 		const data = base.scenes[ 0 ].children[ 0 ];
 
-		this.decomposeParts( data, "Car" );
+		this.wheels = [];
+		this.carBody = new Group();
+		this.carBody.scale.set( 0.01, 0.01, 0.01 );
+		this.carBody.name = "Original Chassis";
+		this.carBody.position.fromArray( model.levelData.car.origin );
+		this.carBody.quaternion.fromArray( model.levelData.car.orientation );
+		this.carBody.updateMatrix();
+
+		this.chaseCamMount = new Object3D();
+		this.chaseCamMount.position.set( 0, 400, - 1000 );
+		this.carBody.add( this.chaseCamMount );
+
+		const wheelNames = [ "wheelFR", "wheelFL", "wheelRR", "wheelRL" ];
+
+		var length = data.children.length;
+		for ( let i = 0; i < length; i ++ ) {
+
+			if ( wheelNames.includes( data.children[ i ].name ) ) {
+
+				data.children[ i ].rotateZ( - Math.PI / 2 );
+				data.children[ i ].name = "Original Wheel_" + i;
+				data.children[ i ].scale.set( 0.01, 0.01, 0.01 );
+				data.children[ i ].children.forEach( obj => obj.position.set( 0, - 68.5, 0 ) );
+				this.wheels.push( data.children[ i ] );
+
+			} else {
+
+				this.carBody.add( data.children[ i ].clone() );
+
+			}
+
+		}
+
+		this.scene.add( this.carBody );
+		this.wheels.forEach( wheel => this.scene.add( wheel ) );
 
 	}
 
@@ -240,32 +265,6 @@ class ImportAssets extends EventDispatcher {
 			terrainMaxHeight: data.map.heightRange[ 0 ],
 			terrainMinHeight: data.map.heightRange[ 1 ]
 		};
-
-	}
-
-	decomposeParts( obj, name ) {
-
-		this.wheels = [];
-		this.carBody = new Group();
-		this.carBody.name = name;
-
-		const wheelNames = [ "wheelFR", "wheelFL", "wheelRR", "wheelRL" ];
-
-		var length = obj.children.length;
-		for ( var i = 0; i < length; i ++ ) {
-
-			if ( wheelNames.includes( obj.children[ i ].name ) ) {
-
-				this.wheels.push( obj.children[ i ] );
-
-			} else {
-
-				this.carBody.add( obj.children[ i ].clone() );
-
-			}
-
-		}
-
 
 	}
 

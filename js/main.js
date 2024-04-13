@@ -27,8 +27,9 @@ import PostProcessingManager from './PostProcessingManager';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 
-var vec3 = new Vector3();
-var quat = new Quaternion();
+const _tempVector1 = new Vector3();
+const _tempVector2 = new Vector3();
+const quat = new Quaternion();
 const keysActions = {
 	"KeyW": 'acceleration',
 	"KeyS": 'braking',
@@ -161,6 +162,18 @@ class TestDrive {
 
 	}
 
+	initPhysics( Ammo ) {
+
+		this.physics = new Physics(
+			Ammo,
+			this.assetManager.carBody.matrix,
+			this.assetManager.heightData,
+		);
+		this.onPhysicsReady();
+		this.assetManager.heightData = null;
+
+	}
+
 	async onPhysicsReady() {
 
 		this.onGameReady();
@@ -237,21 +250,6 @@ class TestDrive {
 
 	}
 
-	initPhysics( Ammo ) {
-
-		this.physics = new Physics(
-			Ammo,
-			this.scene,
-			this.assetManager.carBody,
-			this.assetManager.wheels,
-			this.camera,
-			this.assetManager.heightData,
-			() => this.onPhysicsReady()
-		);
-		this.assetManager.heightData = null;
-
-	}
-
 	render() {
 
 		if ( this.tracker.analysis ) {
@@ -265,36 +263,38 @@ class TestDrive {
 
 
 		this.stats2.begin();
-		this.physics.update();
+		this.physics.update( this.assetManager.carBody, this.assetManager.wheels );
 		this.stats2.end();
 
 	}
 
 	updateCamera() {
 
+		_tempVector2.copy( this.assetManager.carBody.position );
+
 		switch ( this.cameraMode ) {
 
 			case 0:
-				vec3.copy( this.physics.chassis.position );
-				this.camera.position.lerp( vec3, 0.2 );
-				this.camera.lookAt( this.physics.chassis.position.x, this.physics.chassis.position.y, this.physics.chassis.position.z - 20 );
+				_tempVector1.copy( this.assetManager.carBody.position );
+				this.camera.position.lerp( _tempVector1, 0.2 );
+				this.camera.lookAt( this.assetManager.carBody.position.x, this.assetManager.carBody.position.y, this.assetManager.carBody.position.z - 20 );
 				break;
 			case 1:
 
-				this.camera.quaternion.copy( this.physics.chassis.quaternion );
-				quat.setFromAxisAngle( vec3.set( 0, 1, 0 ), Math.PI );
+				this.camera.quaternion.copy( this.assetManager.carBody.quaternion );
+				quat.setFromAxisAngle( _tempVector1.set( 0, 1, 0 ), Math.PI );
 				this.camera.quaternion.multiply( quat );
-				this.camera.position.copy( this.physics.chassis.position ).add( vec3.set( - 0.7, 2, 1 ) );
+				this.camera.position.copy( this.assetManager.carBody.position ).add( _tempVector1.set( - 0.7, 2, 1 ) );
 
 				break;
 			case 2:
-				this.camera.position.set( this.physics.chassis.position.x + 20, this.physics.chassis.position.y + 6, this.physics.chassis.position.z );
-				this.camera.lookAt( this.physics.chassis.position );
+				this.camera.position.set( this.assetManager.carBody.position.x + 20, this.assetManager.carBody.position.y + 6, this.assetManager.carBody.position.z );
+				this.camera.lookAt( this.assetManager.carBody.position );
 				break;
 			case 3:
-				vec3.setFromMatrixPosition( this.physics.chaseCamMount.matrixWorld );
-				this.camera.position.lerp( vec3, 0.05 );
-				this.camera.lookAt( this.physics.chassis.position );
+				_tempVector1.setFromMatrixPosition( this.assetManager.chaseCamMount.matrixWorld );
+				this.camera.position.lerp( _tempVector1, 0.05 );
+				this.camera.lookAt( this.assetManager.carBody.position );
 				break;
 			case 4:
 				break;
