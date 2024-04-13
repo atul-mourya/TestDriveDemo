@@ -1,14 +1,10 @@
 import {
-	Quaternion,
 	Clock,
-	Vector3,
 	Object3D,
 } from 'three';
 import TerrainPhysics from './TerrainPhysics';
 import VehiclePhysics from './VehiclePhysics';
 
-var vec3 = new Vector3();
-var quat = new Quaternion();
 let dt = null;
 
 class Physics {
