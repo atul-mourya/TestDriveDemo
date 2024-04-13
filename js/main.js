@@ -138,7 +138,8 @@ class TestDrive {
 		this.loadEnvironment( gameData );
 
 		const passes = [
-			// { type: 'smaa', config: {} },
+			{ type: 'smaa', config: {} },
+			{ type: 'dof', config: {} },
 			{ type: 'n8ao', config: {} }
 		];
 

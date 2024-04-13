@@ -11,6 +11,7 @@ import {
 	EffectPass,
 	SMAAEffect,
 	SMAAPreset,
+	DepthOfFieldEffect,
 } from "postprocessing";
 import { N8AOPostPass } from "n8ao";
 
@@ -47,6 +48,15 @@ class PostProcessingManager {
 
 				case "smaa":
 					pass = new SMAAEffect( { preset: SMAAPreset.HIGH } );
+					effects.push( pass );
+					break;
+				case "dof":
+					pass = new DepthOfFieldEffect( camera, {
+						focusDistance: 0.0,
+						focalLength: 0.048,
+						bokehScale: 2.0,
+						height: 480
+					} );
 					effects.push( pass );
 					break;
 

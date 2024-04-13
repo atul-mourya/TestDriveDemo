@@ -2043,6 +2043,11 @@ Terrain.generateBlendedMaterial = function ( textures, material ) {
         '    diffuseColor = vec4( diffuse, opacity );\n' +
         '    vec4 color = texture2D( texture_0, MyvUv * vec2( ' + glslifyNumber( t0Repeat.x ) + ', ' + glslifyNumber( t0Repeat.y ) + ' ) + vec2( ' + glslifyNumber( t0Offset.x ) + ', ' + glslifyNumber( t0Offset.y ) + ' ) ); // base\n' +
             assign +
+		// if v.position.z < -13.5, make it blend to the torquoise color. The deeper it is, the more torquoise it becomes.
+		'    if (vPosition.z < -13.5) {\n' +
+		'		float ratio = smoothstep(-13.5, -17.0, vPosition.z);\n' +
+		'		color = mix( color, vec4( 0.0, 0.5, 0.5, 1.0 ), ratio );\n' +
+		'    }\n' +
         '    diffuseColor = color;\n';
 
 	var fragPars = declare + '\n' +
