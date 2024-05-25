@@ -95,6 +95,8 @@ class ImportAssets extends EventDispatcher {
 
 	async _loadLevel( data ) {
 
+		// interesting readings here: https://www.terrain.dk/
+
 		const heightmapImage = new Image();
 		heightmapImage.src = data.map.heightMap;
 

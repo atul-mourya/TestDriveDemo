@@ -1,7 +1,6 @@
 'use strict';
 
 import ImportAssets from './AssetManager';
-import Physics from './Physics/physics';
 import {
 	WebGLRenderer,
 	TextureLoader,
@@ -16,20 +15,21 @@ import {
 	ACESFilmicToneMapping,
 	LinearSRGBColorSpace,
 	Vector3,
-	Quaternion
+	Quaternion,
+	Clock
 } from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
-import Stats from 'three/examples/jsm/libs/stats.module';
+import Stats from 'stats-gl';
 import RendererStats from './vendors/threex/threex.rendererstats';
 import FrameManager from './FrameManager';
 import PostProcessingManager from './PostProcessingManager';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-
 const _tempVector1 = new Vector3();
 const _tempVector2 = new Vector3();
-const quat = new Quaternion();
+const _tempQuaternion = new Quaternion();
+const _tempQuaternion2 = new Quaternion();
 const keysActions = {
 	"KeyW": 'acceleration',
 	"KeyS": 'braking',
@@ -45,30 +45,14 @@ class TestDrive {
 		this.onGameReady = onGameReady;
 
 		this.setting = {
-			//screenshot
-			cameraAngle1: { phi: Math.PI / 2, theta: Math.PI / 4 }, // front corner veiw. It is also the default camera view    **rework needed**
-			cameraAngle2: { phi: Math.PI / 2, theta: Math.PI / 2 }, // side view. To be used for creating snapshot              **rework needed**
-			cameraAngle3: { phi: - Math.PI / 2, theta: - Math.PI / 4 }, // rear corner view. To be used for creating snapshot       **rework needed**
-
 			//initial values
-			ground_clearence: 0, // camera height from ground
-			nearCamLimit: 0, // from car's outer bounding radius
-			farCamLimit: 300, // from car's outer bounding radius
-			extendedFarCamLimit: 200, // for mobile portrait mode screens
-			autoRotateSpeed: 4, // auto rotate speed parameter
-			rotationSensitivity: 0.5,
 			enableDamping: false,
-			userControlledAimation: true, // set true to enable continuos rendering   **rework needed**
-
-			//tween
-			tweenJumpBackDistance: 50, // to be used in effectjs                   **rework needed**
 
 			//render engine
 			antialias: false, // antialiasing
 			toneMappingExposure: 1,
 			enableShadow: false,
 			resolution: 0.25,
-
 			postprocessing: false,
 
 			graphicsFPSLimit: 60, // frame per second
@@ -96,6 +80,8 @@ class TestDrive {
 		this.assetManager = null;
 		this.postProcessor = null;
 
+		this.clock = new Clock();
+
 		if ( this.tracker.analysis ) this.stats();
 
 	}
@@ -110,10 +96,11 @@ class TestDrive {
 		this.renderer = new WebGLRenderer( {
 			antialias: this.setting.postprocessing ? false : this.setting.antialias,
 			alpha: false,
-			logarithmicDepthBuffer: this.setting.postprocessing ? false : true,
-			powerPreference: this.setting.postprocessing ? "high-performance" : "default",
-			stencil: this.setting.postprocessing ? false : true,
-			depth: this.setting.postprocessing ? false : true
+			logarithmicDepthBuffer: false,
+			powerPreference: "high-performance",
+			stencil: false,
+			depth: true,
+			precision: "lowp",
 		} );
 
 		this.renderer.setPixelRatio( window.devicePixelRatio * this.setting.resolution );
@@ -126,8 +113,8 @@ class TestDrive {
 
 		// this.orbitControls = new OrbitControls( this.camera, this.canvas );
 		this.orbitControls = new OrbitControls( this.camera, this.renderer.domElement );
-		this.orbitControls.listenToKeyEvents( window ); // optional
-		this.orbitControls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+		this.orbitControls.listenToKeyEvents( window );
+		this.orbitControls.enableDamping = false;
 		this.orbitControls.dampingFactor = 0.05;
 		this.orbitControls.screenSpacePanning = false;
 		this.orbitControls.minDistance = 100;
@@ -162,15 +149,61 @@ class TestDrive {
 
 	}
 
-	initPhysics( Ammo ) {
+	initPhysics() {
 
-		this.physics = new Physics(
-			Ammo,
-			this.assetManager.carBody.matrix,
-			this.assetManager.heightData,
-		);
-		this.onPhysicsReady();
-		this.assetManager.heightData = null;
+		this.physicsWorker = new Worker( new URL( './Physics/PhysicsWorker.js', import.meta.url ) );
+		const body = this.assetManager.carBody;
+		const position = { x: body.position.x, y: body.position.y, z: body.position.z };
+		const quaternion = { x: body.quaternion.x, y: body.quaternion.y, z: body.quaternion.z, w: body.quaternion.w };
+		const terrainData = this.assetManager.heightData;
+
+		this.physicsWorker.postMessage( { cmd: 'init', terrainData: terrainData, position, quaternion } );
+		this.physicsWorker.onmessage = event => {
+
+			switch ( event.data.cmd ) {
+
+				case 'PhysicsReady':
+					this.onPhysicsReady();
+					break;
+				case 'PhysicsStarted':
+					break;
+				// case 'VehicleTransform':
+				case 'PhysicsUpdated':
+					this.postProcessor.enabled ? this.postProcessor.update() : this.renderer.render( this.scene, this.camera );
+					this.assetManager.carBody.position.set(
+						event.data.data.chassis.position.x,
+						event.data.data.chassis.position.y,
+						event.data.data.chassis.position.z
+					);
+					this.assetManager.carBody.quaternion.set(
+						event.data.data.chassis.quaternion.x,
+						event.data.data.chassis.quaternion.y,
+						event.data.data.chassis.quaternion.z,
+						event.data.data.chassis.quaternion.w
+					);
+					this.assetManager.wheels.forEach( ( wheel, index ) => {
+
+						wheel.position.set(
+							event.data.data.wheels[ index ].position.x,
+							event.data.data.wheels[ index ].position.y,
+							event.data.data.wheels[ index ].position.z
+						);
+						wheel.quaternion.set(
+							event.data.data.wheels[ index ].quaternion.x,
+							event.data.data.wheels[ index ].quaternion.y,
+							event.data.data.wheels[ index ].quaternion.z,
+							event.data.data.wheels[ index ].quaternion.w
+						);
+
+					} );
+					this.updateCamera();
+					this.stats.update();
+
+					break;
+
+			}
+
+		};
 
 	}
 
@@ -178,9 +211,9 @@ class TestDrive {
 
 		this.onGameReady();
 		this.sceneReady = true;
-		this.frameManager.initAnimateFrame( () => this.render() );
+		this.frameManager.initAnimateFrame( () => this.physicsWorker.postMessage( { cmd: 'update', dt: this.clock.getDelta() } ) );
 		this.frameManager.startAnimate();
-		this.fpsLimit = this.setting.physicsFPSLimit;
+		this.frameManager.fpsLimit = this.setting.physicsFPSLimit;
 		this.onWindowResize();
 
 	}
@@ -239,7 +272,8 @@ class TestDrive {
 
 		const scope = this;
 
-		this.assetManager.addEventListener( 'ready', () => Ammo().then( Ammo => scope.initPhysics( Ammo ), false ) );
+		// this.assetManager.addEventListener( 'ready', () => Ammo().then( Ammo => scope.initPhysics( Ammo ), false ) );
+		this.assetManager.addEventListener( 'ready', () => scope.initPhysics(), false );
 
 		document.addEventListener( 'keypress', e => scope.onKeyPress( e ), false );
 		window.addEventListener( 'resize', () => scope.onWindowResize(), false );
@@ -250,67 +284,56 @@ class TestDrive {
 
 	}
 
-	render() {
-
-		if ( this.tracker.analysis ) {
-
-			this.rendererStats.update( this.renderer );
-			this.stats.update();
-
-		}
-
-		this.cameraMode === 4 ? this.orbitControls.update() : this.updateCamera();
-
-
-		this.stats2.begin();
-		this.physics.update( this.assetManager.carBody, this.assetManager.wheels );
-		this.stats2.end();
-
-	}
 
 	updateCamera() {
 
-		_tempVector2.copy( this.assetManager.carBody.position );
-
 		switch ( this.cameraMode ) {
 
-			case 0:
-				_tempVector1.copy( this.assetManager.carBody.position );
-				this.camera.position.lerp( _tempVector1, 0.2 );
-				this.camera.lookAt( this.assetManager.carBody.position.x, this.assetManager.carBody.position.y, this.assetManager.carBody.position.z - 20 );
-				break;
-			case 1:
+			case 0: // Driver View
+				// Set the camera position relative to the car's position and orientation
+				_tempVector1.set( 0.5, 2.2, - 1 ); // Adjust for driver's seat position
+				_tempVector1.applyQuaternion( this.assetManager.carBody.quaternion );
+				_tempVector1.add( this.assetManager.carBody.position );
+				this.camera.position.copy( _tempVector1 );
 
-				this.camera.quaternion.copy( this.assetManager.carBody.quaternion );
-				quat.setFromAxisAngle( _tempVector1.set( 0, 1, 0 ), Math.PI );
-				this.camera.quaternion.multiply( quat );
-				this.camera.position.copy( this.assetManager.carBody.position ).add( _tempVector1.set( - 0.7, 2, 1 ) );
+				// Calculate the target quaternion for the camera
+				_tempQuaternion2.copy( this.assetManager.carBody.quaternion );
+				_tempQuaternion2.multiply( new Quaternion().setFromAxisAngle( new Vector3( 0, 1, 0 ), Math.PI ) );
 
+				// Slerp the camera's current quaternion to the target quaternion
+				this.camera.quaternion.slerp( _tempQuaternion2, 0.2 );
 				break;
-			case 2:
+
+			case 1: // Front Camera View
+				_tempVector1.set( 0, 1.5, 4 ); // Position in front of the car
+				_tempVector1.applyQuaternion( this.assetManager.carBody.quaternion );
+				_tempVector1.add( this.assetManager.carBody.position );
+				this.camera.position.copy( _tempVector1 );
+
+				_tempQuaternion.setFromAxisAngle( new Vector3( 0, 1, 0 ), Math.PI );
+				this.camera.quaternion.copy( this.assetManager.carBody.quaternion ).multiply( _tempQuaternion );
+				break;
+
+			case 2: // Fixed Camera Ahead of Car
 				this.camera.position.set( this.assetManager.carBody.position.x + 20, this.assetManager.carBody.position.y + 6, this.assetManager.carBody.position.z );
 				this.camera.lookAt( this.assetManager.carBody.position );
 				break;
-			case 3:
+
+			case 3: // Chase Cam View
 				_tempVector1.setFromMatrixPosition( this.assetManager.chaseCamMount.matrixWorld );
 				this.camera.position.lerp( _tempVector1, 0.05 );
 				this.camera.lookAt( this.assetManager.carBody.position );
 				break;
-			case 4:
+
+			case 4: // Orbit Controls
+				this.orbitControls.update();
+				break;
+
+			default:
+				console.warn( `Unknown camera mode: ${this.cameraMode}` );
 				break;
 
 		}
-
-	}
-
-	recreateRendererContext() {
-
-		_global.renderer.dispose();
-		_global.renderer.forceContextLoss();
-		_global.renderer.context = undefined;
-		var targetDOM = _global.renderer.domElement;
-		targetDOM.parentNode.removeChild( targetDOM );
-		_initRenderer();
 
 	}
 
@@ -334,7 +357,7 @@ class TestDrive {
 
 		if ( keysActions[ e.code ] ) {
 
-			this.physics.vehicleActor.actions[ keysActions[ e.code ] ] = false;
+			this.physicsWorker.postMessage( { cmd: 'keyUpAction', action: keysActions[ e.code ] } );
 			e.preventDefault();
 			e.stopPropagation();
 			return false;
@@ -347,7 +370,7 @@ class TestDrive {
 
 		if ( keysActions[ e.code ] ) {
 
-			this.physics.vehicleActor.actions[ keysActions[ e.code ] ] = true;
+			this.physicsWorker.postMessage( { cmd: 'keyDownAction', action: keysActions[ e.code ] } );
 			e.preventDefault();
 			e.stopPropagation();
 			return false;
@@ -369,23 +392,21 @@ class TestDrive {
 
 	stats() {
 
-		this.stats = new Stats();
+		this.stats = new Stats( {
+			precision: 1,
+			horizontal: false
+		} );
+		this.stats.init( this.renderer );
 		this.stats.dom.style.position = 'absolute';
 		this.stats.dom.style.top = '0px';
 		this.stats.dom.style.left = '80px';
 		document.body.appendChild( this.stats.dom );
 
-		this.stats2 = new Stats();
-		this.stats2.dom.style.position = 'absolute';
-		this.stats2.dom.style.top = '0px';
-		this.stats2.dom.style.left = '160px';
-		document.body.appendChild( this.stats2.dom );
-
-		this.rendererStats = new RendererStats();
-		this.rendererStats.domElement.style.position = 'absolute';
-		this.rendererStats.domElement.style.left = '0px';
-		this.rendererStats.domElement.style.top = '0px';
-		document.body.appendChild( this.rendererStats.domElement );
+		// this.rendererStats = new RendererStats();
+		// this.rendererStats.domElement.style.position = 'absolute';
+		// this.rendererStats.domElement.style.left = '0px';
+		// this.rendererStats.domElement.style.top = '0px';
+		// document.body.appendChild( this.rendererStats.domElement );
 
 	}
 

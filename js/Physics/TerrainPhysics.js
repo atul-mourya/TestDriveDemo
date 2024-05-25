@@ -1,6 +1,4 @@
-import { PlaneGeometry } from 'three';
-
-export default class TerrainPhysics {
+class TerrainPhysics {
 
 	constructor( Ammo, data ) {
 
@@ -77,19 +75,6 @@ export default class TerrainPhysics {
 	}
 
 	generateRigidBody( data, heightField ) {
-
-		var geometry = new PlaneGeometry( data.terrainWidth, data.terrainWidth, data.terrainWidth - 1, data.terrainWidth - 1 );
-		geometry.rotateX( - Math.PI / 2 );
-
-		const positions = geometry.getAttribute( 'position' );
-		const count = positions.count;
-		for ( var i = 0; i < count; i ++ ) {
-
-			positions.setY( i, data.heightData[ i ] );
-
-		}
-
-		geometry.computeVertexNormals();
 
 		const groundMass = 0;
 		const height = data.terrainMaxHeight + data.terrainMinHeight;

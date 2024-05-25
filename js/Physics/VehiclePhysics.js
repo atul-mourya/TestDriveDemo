@@ -1,22 +1,24 @@
-import { Matrix4, Vector3, Quaternion } from "three";
-
 const FRONT_LEFT = 0;
 const FRONT_RIGHT = 1;
 const BACK_LEFT = 2;
 const BACK_RIGHT = 3;
 let tm, p, q, i;
 
-let chassisPosition = new Vector3();
-let chassisQuaternion = new Quaternion();
-export default class VehiclePhysics {
+let chassisPosition = null;
+let chassisQuaternion = null;
+let vehicleTransform = {
+	wheels: [],
+	chassis: { position: {}, quaternion: {} }
+};
+class VehiclePhysics {
 
-	constructor( Ammo, physicsWorld, chassisMatrix ) {
+	constructor( Ammo, physicsWorld, position, quaternion ) {
 
 		this.Ammo = Ammo;
 		this.actions = {};
 
-		chassisPosition.setFromMatrixPosition( chassisMatrix );
-		chassisQuaternion.setFromRotationMatrix( chassisMatrix );
+		chassisPosition = position;
+		chassisQuaternion = quaternion;
 
 		const DISABLE_DEACTIVATION = 4;
 
@@ -107,11 +109,11 @@ export default class VehiclePhysics {
 		// var tm, p, q, i;
 		this.wheelsCount = this.vehicle.getNumWheels();
 
-		this.speedometer = document.createElement( 'p' );
-		this.speedometer.style.position = 'absolute';
-		this.speedometer.style.bottom = '0px';
-		this.speedometer.style.left = '0px';
-		document.body.appendChild( this.speedometer );
+		// this.speedometer = document.createElement( 'p' );
+		// this.speedometer.style.position = 'absolute';
+		// this.speedometer.style.bottom = '0px';
+		// this.speedometer.style.left = '0px';
+		// document.body.appendChild( this.speedometer );
 
 		this.isReady = true;
 
@@ -119,7 +121,7 @@ export default class VehiclePhysics {
 	}
 
 	// Sync keybord actions and physics and graphics
-	update( dt, chassis, wheels ) {
+	update( dt ) {
 
 		this.speed = this.vehicle.getCurrentSpeedKmHour();
 		// this.speedometer.innerText = ( this.speed < 0 ? '(R) ' : '' ) + Math.abs( this.speed ).toFixed( 1 ) + ' km/h';
@@ -176,6 +178,8 @@ export default class VehiclePhysics {
 		this.vehicle.setSteeringValue( this.vehicleSteering, FRONT_LEFT );
 		this.vehicle.setSteeringValue( this.vehicleSteering, FRONT_RIGHT );
 
+		vehicleTransform.wheels = [];
+
 		for ( i = 0; i < this.wheelsCount; i ++ ) {
 
 			this.vehicle.updateWheelTransform( i, true );
@@ -183,8 +187,10 @@ export default class VehiclePhysics {
 			p = tm.getOrigin();
 			q = tm.getRotation();
 
-			wheels[ i ].position.set( p.x(), p.y(), p.z() );
-			wheels[ i ].quaternion.set( q.x(), q.y(), q.z(), q.w() );
+			vehicleTransform.wheels.push( {
+				position: { x: p.x(), y: p.y(), z: p.z() },
+				quaternion: { x: q.x(), y: q.y(), z: q.z(), w: q.w() }
+			} );
 
 		}
 
@@ -192,8 +198,10 @@ export default class VehiclePhysics {
 		p = tm.getOrigin();
 		q = tm.getRotation();
 
-		chassis.position.set( p.x(), p.y() - 0.5, p.z() );
-		chassis.quaternion.set( q.x(), q.y(), q.z(), q.w() );
+		vehicleTransform.chassis.position = { x: p.x(), y: p.y() - 0.5, z: p.z() };
+		vehicleTransform.chassis.quaternion = { x: q.x(), y: q.y(), z: q.z(), w: q.w() };
+
+		return vehicleTransform;
 
 	}
 
