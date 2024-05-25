@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-importScripts( '../../public/scripts/ammo/ammo.js', './physics2' );
+importScripts( '../../../public/scripts/ammo/ammo.js', './physics2' );
 
 let physicsInstance;
 

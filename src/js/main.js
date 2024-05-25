@@ -399,7 +399,7 @@ class TestDrive {
 		this.stats.init( this.renderer );
 		this.stats.dom.style.position = 'absolute';
 		this.stats.dom.style.top = '0px';
-		this.stats.dom.style.left = '80px';
+		this.stats.dom.style.left = '00px';
 		document.body.appendChild( this.stats.dom );
 
 		// this.rendererStats = new RendererStats();
