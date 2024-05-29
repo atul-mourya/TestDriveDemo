@@ -1,6 +1,7 @@
 // vite.config.js
-import { splitVendorChunkPlugin } from 'vite';
+// import { splitVendorChunkPlugin } from 'vite';
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 export default defineConfig( {
 	base: '/TestDriveDemo/',
 	build: {
@@ -21,5 +22,7 @@ export default defineConfig( {
 	// 		'three'
 	// 	]
 	// },
-	plugins: [ splitVendorChunkPlugin() ],
+	plugins: [
+		// splitVendorChunkPlugin(),
+		react() ],
 } );

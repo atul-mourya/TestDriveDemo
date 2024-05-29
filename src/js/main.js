@@ -1,5 +1,3 @@
-'use strict';
-
 import ImportAssets from './AssetManager';
 import {
 	WebGLRenderer,
@@ -25,6 +23,7 @@ import RendererStats from './vendors/threex/threex.rendererstats';
 import FrameManager from './FrameManager';
 import PostProcessingManager from './PostProcessingManager';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import Worker from './Physics/PhysicsWorker.js?worker';
 
 const _tempVector1 = new Vector3();
 const _tempVector2 = new Vector3();
@@ -52,8 +51,8 @@ class TestDrive {
 			antialias: false, // antialiasing
 			toneMappingExposure: 1,
 			enableShadow: false,
-			resolution: 0.25,
-			postprocessing: false,
+			resolution: 1,
+			postprocessing: true,
 
 			graphicsFPSLimit: 60, // frame per second
 			physicsFPSLimit: 60, // frame per second
@@ -149,9 +148,9 @@ class TestDrive {
 
 	}
 
-	initPhysics() {
+	async initPhysics() {
 
-		this.physicsWorker = new Worker( new URL( './Physics/PhysicsWorker.js', import.meta.url ) );
+		this.physicsWorker = new Worker();
 		const body = this.assetManager.carBody;
 		const position = { x: body.position.x, y: body.position.y, z: body.position.z };
 		const quaternion = { x: body.quaternion.x, y: body.quaternion.y, z: body.quaternion.z, w: body.quaternion.w };
@@ -169,7 +168,6 @@ class TestDrive {
 					break;
 				// case 'VehicleTransform':
 				case 'PhysicsUpdated':
-					this.postProcessor.enabled ? this.postProcessor.update() : this.renderer.render( this.scene, this.camera );
 					this.assetManager.carBody.position.set(
 						event.data.data.chassis.position.x,
 						event.data.data.chassis.position.y,
@@ -196,10 +194,10 @@ class TestDrive {
 						);
 
 					} );
-					this.updateCamera();
 					this.stats.update();
 
 					break;
+				default:
 
 			}
 
@@ -211,7 +209,13 @@ class TestDrive {
 
 		this.onGameReady();
 		this.sceneReady = true;
-		this.frameManager.initAnimateFrame( () => this.physicsWorker.postMessage( { cmd: 'update', dt: this.clock.getDelta() } ) );
+		this.frameManager.initAnimateFrame( () => {
+
+			this.updateGraphics();
+			this.updatePhysics();
+
+		} );
+
 		this.frameManager.startAnimate();
 		this.frameManager.fpsLimit = this.setting.physicsFPSLimit;
 		this.onWindowResize();
@@ -281,6 +285,19 @@ class TestDrive {
 		window.addEventListener( 'blur', () => scope.frameManager.stopAnimate(), false );
 		window.addEventListener( 'keydown', e => scope.keydown( e ), false );
 		window.addEventListener( 'keyup', e => scope.keyup( e ), false );
+
+	}
+
+	updatePhysics() {
+
+		this.physicsWorker.postMessage( { cmd: 'update', dt: this.clock.getDelta() } );
+
+	}
+
+	updateGraphics() {
+
+		this.postProcessor.enabled ? this.postProcessor.update() : this.renderer.render( this.scene, this.camera );
+		this.updateCamera();
 
 	}
 

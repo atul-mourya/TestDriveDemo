@@ -10,7 +10,7 @@ let vehicleTransform = {
 	wheels: [],
 	chassis: { position: {}, quaternion: {} }
 };
-class VehiclePhysics {
+export default class VehiclePhysics {
 
 	constructor( Ammo, physicsWorld, position, quaternion ) {
 

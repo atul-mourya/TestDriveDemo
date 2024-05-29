@@ -1,4 +1,4 @@
-class TerrainPhysics {
+export default class TerrainPhysics {
 
 	constructor( Ammo, data ) {
 
@@ -96,8 +96,8 @@ class TerrainPhysics {
 
 	destroy( data ) {
 
-		this.Ammo._free( this.heightField );
-		this.Ammo._free( this.body );
+		// this.Ammo._free( this.heightField );
+		// this.Ammo._free( this.body );
 		delete data.heightData; // free memory
 
 	}

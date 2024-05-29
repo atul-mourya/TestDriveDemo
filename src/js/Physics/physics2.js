@@ -1,4 +1,5 @@
-self.importScripts( './VehiclePhysics', './TerrainPhysics' );
+import VehiclePhysics from './VehiclePhysics';
+import TerrainPhysics from './TerrainPhysics';
 
 let updateTransform = null;
 
@@ -12,7 +13,7 @@ function Physics( AmmoLib, terrainData, position, quaternion ) {
 	const physicsWorld = new AmmoLib.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration );
 	physicsWorld.setGravity( new AmmoLib.btVector3( 0, - 9.75, 0 ) );
 
-	const fpsLimit = 30;
+	const fpsLimit = 60;
 
 	let time = 0;
 
@@ -29,13 +30,10 @@ function Physics( AmmoLib, terrainData, position, quaternion ) {
 	// startSimilation();
 
 
-	function startSimulation() {
+	function startSimulation( dt ) {
 
-		setInterval( () => {
+		update( dt );
 
-			update();
-
-		}, 1000 / fpsLimit );
 
 	}
 
@@ -49,8 +47,8 @@ function Physics( AmmoLib, terrainData, position, quaternion ) {
 
 		if ( ! needsReset ) {
 
-			physicsWorld.stepSimulation( dt, 1 );
 			updateTransform = vehicleActor.update( dt );
+			physicsWorld.stepSimulation( dt, 1 );
 			time += dt;
 
 		} else {
@@ -80,5 +78,5 @@ function Physics( AmmoLib, terrainData, position, quaternion ) {
 
 }
 
-// export default Physics;
+export default Physics;
 

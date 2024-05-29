@@ -1,4 +1,4 @@
-'use strict';
+
 
 import {
 	EventDispatcher,
@@ -18,6 +18,158 @@ import Terrain from './vendors/terrain/Terrain';
 import Gaussian from "./vendors/terrain/gaussian";
 import { fromFolliageMap, loadImageAsync, excludePoints } from './vendors/terrain/images';
 
+class TerrainChunkManager {
+
+	constructor( scene, data, chunkSize = 512 ) {
+
+		this.scene = scene;
+		this.data = data;
+		this.chunkSize = chunkSize;
+		this.chunks = {};
+		this.activeChunks = {};
+
+	}
+
+	loadChunk( x, y ) {
+
+		const key = `${x}_${y}`;
+		if ( this.chunks[ key ] ) return this.chunks[ key ];
+
+		const chunk = this._createChunk( x, y );
+		this.chunks[ key ] = chunk;
+		this.scene.add( chunk );
+		return chunk;
+
+	}
+
+	unloadChunk( x, y ) {
+
+		const key = `${x}_${y}`;
+		if ( this.chunks[ key ] ) {
+
+			this.scene.remove( this.chunks[ key ] );
+			delete this.chunks[ key ];
+
+		}
+
+	}
+
+	_createChunk( x, y ) {
+
+		const terrainMaterial = this._createTerrainMaterial();
+		const heightmapImage = new Image();
+		heightmapImage.src = this.data.map.heightMap;
+
+		const chunk = Terrain( {
+			xSize: this.chunkSize,
+			ySize: this.chunkSize,
+			xSegments: this.chunkSize - 1,
+			ySegments: this.chunkSize - 1,
+			maxHeight: this.data.map.heightRange[ 0 ],
+			minHeight: this.data.map.heightRange[ 1 ],
+			heightmap: heightmapImage,
+			material: terrainMaterial,
+			offsetX: x * this.chunkSize,
+			offsetY: y * this.chunkSize,
+		} );
+
+		Gaussian( chunk.children[ 0 ].geometry, {
+			xSize: this.chunkSize,
+			ySize: this.chunkSize,
+			xSegments: this.chunkSize - 1,
+			ySegments: this.chunkSize - 1,
+			maxHeight: this.data.map.heightRange[ 0 ],
+			minHeight: this.data.map.heightRange[ 1 ],
+		}, 1, 11 );
+
+		Terrain.Normalize( chunk.children[ 0 ], {
+			xSize: this.chunkSize,
+			ySize: this.chunkSize,
+			xSegments: this.chunkSize - 1,
+			ySegments: this.chunkSize - 1,
+			maxHeight: this.data.map.heightRange[ 0 ],
+			minHeight: this.data.map.heightRange[ 1 ],
+		} );
+
+		return chunk;
+
+	}
+
+	_createTerrainMaterial() {
+
+		const loader = new TextureLoader();
+		const textures = [
+			loader.load( './images/sand001.jpg' ),
+			loader.load( './images/GrassGreenTexture0002.jpg' ),
+			loader.load( './images/rock001.png' ),
+			loader.load( './images/snow1.jpg' ),
+			loader.load( this.data.map.trackMap ),
+		];
+
+		textures.forEach( ( t, i ) => {
+
+			t.wrapS = t.wrapT = RepeatWrapping;
+			t.colorSpace = SRGBColorSpace;
+			if ( i < 3 ) t.repeat.set( 200, 200 );
+
+		} );
+		textures[ 2 ].repeat.set( 20, 20 );
+
+		let terrainMaterial = new MeshBasicMaterial( {
+			roughness: 1,
+			metalness: 0,
+			envMapIntensity: 0,
+		} );
+
+		return Terrain.generateBlendedMaterial( [
+			{ texture: textures[ 0 ] },
+			{ texture: textures[ 1 ], levels: [ this.data.map.seaLevel, this.data.map.seaLevel + 5, 20, 40 ] },
+			{ texture: textures[ 2 ], glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2' },
+			{ texture: textures[ 3 ], glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)' },
+			{ texture: textures[ 4 ], glsl: '1.0 - texture2D(texture_4, MyvUv).a' },
+		], terrainMaterial );
+
+	}
+
+	update( playerPosition ) {
+
+		const chunkX = Math.floor( playerPosition.x / this.chunkSize );
+		const chunkY = Math.floor( playerPosition.z / this.chunkSize );
+
+		const radius = 2; // Number of chunks to keep around the player
+
+		for ( let x = chunkX - radius; x <= chunkX + radius; x ++ ) {
+
+			for ( let y = chunkY - radius; y <= chunkY + radius; y ++ ) {
+
+				const key = `${x}_${y}`;
+				if ( ! this.activeChunks[ key ] ) {
+
+					this.loadChunk( x, y );
+					this.activeChunks[ key ] = true;
+
+				}
+
+			}
+
+		}
+
+		for ( const key in this.activeChunks ) {
+
+			const [ x, y ] = key.split( '_' ).map( Number );
+			if ( Math.abs( x - chunkX ) > radius || Math.abs( y - chunkY ) > radius ) {
+
+				this.unloadChunk( x, y );
+				delete this.activeChunks[ key ];
+
+			}
+
+		}
+
+	}
+
+}
+
 
 class ImportAssets extends EventDispatcher {
 
@@ -32,6 +184,7 @@ class ImportAssets extends EventDispatcher {
 		this.scene = scene;
 		this.camera = camera;
 
+		this.terrainChunkManager = new TerrainChunkManager( scene, data.levelData );
 		this.init( data );
 
 	}
@@ -41,12 +194,20 @@ class ImportAssets extends EventDispatcher {
 		var loadingManager = new LoadingManager();
 
 		await this._loadBaseParts( data, loadingManager );
-		const terrainObj = await this._loadLevel( data.levelData );
-		this.heightData = await this._createHeightField( terrainObj.children[ 0 ].geometry, data.levelData );
-
 		console.log( 'Environment, car and standard parts loaded' );
-
 		this.dispatchEvent( { type: 'ready' } );
+
+		debugger;
+		this.terrainChunkManager.update( this.camera.position );
+
+		// await this._loadBaseParts( data, loadingManager );
+		// const terrainObj = await this._loadLevel( data.levelData );
+		// this.heightData = await this._createHeightField( terrainObj.children[ 0 ].geometry, data.levelData );
+
+		// console.log( 'Environment, car and standard parts loaded' );
+
+		// this.dispatchEvent( { type: 'ready' } );
+
 
 	}
 
@@ -91,6 +252,12 @@ class ImportAssets extends EventDispatcher {
 
 		this.scene.add( this.carBody );
 		this.wheels.forEach( wheel => this.scene.add( wheel ) );
+
+	}
+
+	update() {
+
+		this.terrainChunkManager.update( this.camera.position );
 
 	}
 

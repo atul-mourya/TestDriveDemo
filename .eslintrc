@@ -1,5 +1,5 @@
 {
-  "extends": "mdcs",
+  "extends": ["react-app","mdcs"],
   "rules": {},
   "ignorePatterns": [
     "node_modules",
