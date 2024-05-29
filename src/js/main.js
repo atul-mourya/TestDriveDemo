@@ -51,8 +51,8 @@ class TestDrive {
 			antialias: false, // antialiasing
 			toneMappingExposure: 1,
 			enableShadow: false,
-			resolution: 1,
-			postprocessing: true,
+			resolution: 0.5,
+			postprocessing: false,
 
 			graphicsFPSLimit: 60, // frame per second
 			physicsFPSLimit: 60, // frame per second
