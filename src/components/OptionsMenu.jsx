@@ -1,22 +1,24 @@
 import React from 'react';
+import { Button } from '@nextui-org/react';
+import '../styles/OptionsMenu.css';
 
-const OptionsMenu = ( { onQuickPlay } ) => (
+const OptionsMenu = ( { onQuickPlay, onSettingsOpen, onEventsOpen } ) => (
 	<div id="options">
-		<button className="option-btn" id="quick-play" onClick={onQuickPlay}>
+		<Button className="option-btn bg-white" onClick={onQuickPlay}>
 			<p>Quick Play</p>
-		</button>
-		<button className="option-btn" id="events">
+		</Button>
+		<Button className="option-btn bg-white" onClick={onEventsOpen}>
 			<p>Events</p>
-		</button>
-		<button className="option-btn" id="custom-play">
+		</Button>
+		<Button className="option-btn bg-white">
 			<p>Custom Play</p>
-		</button>
-		<button className="option-btn" id="settings">
+		</Button>
+		<Button className="option-btn bg-white" onClick={onSettingsOpen}>
 			<p>Settings</p>
-		</button>
-		<button className="option-btn" id="about">
+		</Button>
+		<Button className="option-btn bg-white">
 			<p>About</p>
-		</button>
+		</Button>
 	</div>
 );
 
