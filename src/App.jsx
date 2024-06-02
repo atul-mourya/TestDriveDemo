@@ -51,7 +51,7 @@ const App = () => {
 
 	return (
 		<div>
-			{isDashboardActive && <Dashboard onPlayStart={handleStart} />}
+			{isDashboardActive && <Dashboard onPlayStart={handleStart}/>}
 			{isLoaderVisible && <Loader />}
 			{isGameActive && <>
 				<Info />

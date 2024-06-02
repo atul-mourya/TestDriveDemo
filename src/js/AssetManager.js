@@ -1,4 +1,4 @@
-'use strict';
+
 
 import {
 	EventDispatcher,
@@ -11,6 +11,7 @@ import {
 	LoadingManager,
 	Object3D,
 	InstancedMesh,
+	MathUtils
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/Terrain';
@@ -105,8 +106,8 @@ class ImportAssets extends EventDispatcher {
 		const t1 = await loader.loadAsync( './images/sand001.jpg' );
 		const t2 = await loader.loadAsync( './images/GrassGreenTexture0002.jpg' );
 		const t3 = await loader.loadAsync( './images/rock001.png' );
-		const t4 = await loader.loadAsync( './images/snow1.jpg' );
-		const t5 = await loader.loadAsync( data.map.trackMap );
+		const t4 = await loader.loadAsync( './images/Snow.jpg' );
+		const t5 = data.map.trackMap && await loader.loadAsync( data.map.trackMap );
 
 		t1.wrapS = t1.wrapT = RepeatWrapping;
 		t2.wrapS = t2.wrapT = RepeatWrapping;
@@ -116,13 +117,13 @@ class ImportAssets extends EventDispatcher {
 		t2.colorSpace = SRGBColorSpace;
 		t3.colorSpace = SRGBColorSpace;
 		t4.colorSpace = SRGBColorSpace;
-		t5.colorSpace = SRGBColorSpace;
+		t5 && ( t5.colorSpace = SRGBColorSpace );
 
 		t1.repeat.x = t1.repeat.y = 200;
 		t2.repeat.x = t2.repeat.y = 200;
 		t3.repeat.x = t3.repeat.y = 20;
 
-		t5.anisotropy = 16;
+		t5 && ( t5.anisotropy = 16 );
 
 		let terrainMaterial = new MeshBasicMaterial( {
 			roughness: 1,
@@ -130,14 +131,49 @@ class ImportAssets extends EventDispatcher {
 			envMapIntensity: 0,
 		} );
 		const seaLevel = data.map.seaLevel;
-		terrainMaterial = Terrain.generateBlendedMaterial( [
-			{ texture: t1 },
-			{ texture: t2, levels: [ seaLevel, seaLevel + 5, 20, 40 ] },
-			{ texture: t3, glsl: 'slope > 0.7853981633974483 ? 0.2 : 1.0 - smoothstep(0.47123889803846897, 0.7853981633974483, slope) + 0.2' }, // between 27 and 45 degrees
-			{ texture: t4, glsl: '1.0 - smoothstep(35.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 55.0, vPosition.z)' },
-			{ texture: t5, glsl: '1.0 - texture2D( texture_4, MyvUv ).a' },
 
-		], terrainMaterial );
+		const blendParams = {
+			baseTexture: t1,
+			grassTexture: t2,
+			grassBlendStart: seaLevel,
+			grassBlendEnd: seaLevel + 5,
+			grassTransitionStart: 20,
+			grassTransitionEnd: 40,
+			rockTexture: t3,
+			rockSlopeStartAngle: MathUtils.degToRad( 27 ),
+			rockSlopeEndAngle: MathUtils.degToRad( 45 ),
+			snowTexture: t4,
+			snowBlendStart: 20,
+			snowBlendEnd: 40,
+			trackTexture: t5,
+			trackBlendStart: - 30,
+			trackBlendEnd: 30
+		};
+
+		const blendData = [
+			{ texture: blendParams.baseTexture },
+			{
+				texture: blendParams.grassTexture,
+				levels: [
+					blendParams.grassBlendStart,
+					blendParams.grassBlendEnd,
+					blendParams.grassTransitionStart,
+					blendParams.grassTransitionEnd
+				]
+			},
+			{
+				texture: blendParams.rockTexture,
+				glsl: `slope > ${blendParams.rockSlopeEndAngle} ? 0.2 : 1.0 - smoothstep(${blendParams.rockSlopeStartAngle}, ${blendParams.rockSlopeEndAngle}, slope) + 0.2`
+			},
+			{
+				texture: blendParams.snowTexture,
+				glsl: `1.0 - smoothstep(${blendParams.snowBlendStart}.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, ${blendParams.snowBlendEnd}.0, vPosition.z)`
+			},
+		];
+
+		t5 && blendData.push( { texture: t5, glsl: '1.0 - texture2D( texture_4, MyvUv ).a' } );
+
+		terrainMaterial = Terrain.generateBlendedMaterial( blendData, terrainMaterial );
 
 		// var terrainMaterial2 = new MeshLambertMaterial( {
 		// 	color: 0xffffff,
@@ -170,7 +206,11 @@ class ImportAssets extends EventDispatcher {
 
 		this.scene.add( level );
 
-		await this.buildTrees( data, level, terrainWidth, terrainDepth );
+		if ( data.map.folliageMap ) {
+
+			await this.buildTrees( data, level, terrainWidth, terrainDepth );
+
+		}
 
 		return level;
 

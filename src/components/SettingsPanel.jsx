@@ -1,20 +1,23 @@
 import React from "react";
 import { FaVolumeXmark } from "react-icons/fa6";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Tabs, Tab, Card, CardBody, Slider, Switch, Select, SelectItem, useDisclosure } from "@nextui-org/react";
+import useSettingsStore from '../stores/settings';
 
-export default function SettingPanel( { isOpen, setClose } ) {
+export default function SettingPanel() {
+
+	const { isSettingPanelActive, setSettingPanelActive } = useSettingsStore();
 
 	const { onClose } = useDisclosure();
 
 	const handleClose = () => {
 
-		setClose();
+		setSettingPanelActive( false );
 		onClose();
 
 	};
 
 	return (
-		<Modal backdrop="blur" isOpen={isOpen} onClose={handleClose} isDismissable={false}>
+		<Modal backdrop="blur" isOpen={isSettingPanelActive} onClose={handleClose} isDismissable={false}>
 			<ModalContent>
 				{( onClose ) => (
 					<>
