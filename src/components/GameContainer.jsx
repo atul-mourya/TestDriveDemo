@@ -1,16 +1,16 @@
-import React, { forwardRef, useEffect } from 'react';
+import React, { forwardRef, useEffect, useRef } from 'react';
 import './GameContainer.css';
 
 const GameContainer = forwardRef( ( props, ref ) => {
 
-	// Handler for ESC key press
+	const isPausedRef = useRef( false );
+
 	const handleEscKeyPress = ( event ) => {
 
-	  if ( event.key === 'Escape' || event.keyCode === 27 ) {
+		if ( event.key === 'Escape' || event.keyCode === 27 ) {
 
-			// Handle the ESC key press
-			console.log( 'ESC key pressed' );
-			// You can add additional logic here, such as closing a modal, exiting full screen, etc.
+			isPausedRef.current ? window.game.resume() : window.game.pause();
+			isPausedRef.current = ! isPausedRef.current;
 
 		}
 
@@ -18,11 +18,11 @@ const GameContainer = forwardRef( ( props, ref ) => {
 
 	useEffect( () => {
 
-	  // Add event listener for keydown
-	  window.addEventListener( 'keydown', handleEscKeyPress );
+		// Add event listener for keydown
+		window.addEventListener( 'keydown', handleEscKeyPress );
 
-	  // Cleanup event listener on component unmount
-	  return () => {
+		// Cleanup event listener on component unmount
+		return () => {
 
 			window.removeEventListener( 'keydown', handleEscKeyPress );
 
@@ -31,7 +31,7 @@ const GameContainer = forwardRef( ( props, ref ) => {
 	}, [] ); // Empty dependency array ensures this runs once on mount and cleanup on unmount
 
 	return (
-	  <div id="game-container" ref={ref}></div>
+		<div id="game-container" ref={ref}></div>
 	);
 
 } );

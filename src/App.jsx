@@ -35,15 +35,15 @@ const App = () => {
 		if ( isGameActive && gameContainerRef.current ) {
 
 			const container = gameContainerRef.current;
-			const game = new TestDrive(
+			window.game = new TestDrive(
 				{
 					url: "/resources/models/model_lookups.json",
 					container,
 				},
 				onGameReady
 			);
-			gameInstanceRef.current = game;
-			game.loadGame( gameContext.level, gameContext.map, gameContext.type );
+			gameInstanceRef.current = window.game;
+			window.game.loadGame( gameContext.level, gameContext.map, gameContext.type );
 
 		}
 

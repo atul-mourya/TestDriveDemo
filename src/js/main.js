@@ -301,7 +301,6 @@ class TestDrive {
 
 	}
 
-
 	updateCamera() {
 
 		switch ( this.cameraMode ) {
@@ -351,6 +350,18 @@ class TestDrive {
 				break;
 
 		}
+
+	}
+
+	pause() {
+
+		this.frameManager.stopAnimate();
+
+	}
+
+	resume() {
+
+		this.frameManager.startAnimate();
 
 	}
 

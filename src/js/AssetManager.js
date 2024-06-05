@@ -11,7 +11,8 @@ import {
 	LoadingManager,
 	Object3D,
 	InstancedMesh,
-	MathUtils
+	MathUtils,
+	DoubleSide
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/Terrain';
@@ -223,8 +224,9 @@ class ImportAssets extends EventDispatcher {
 		const folliagemapImage = await loadImageAsync( data.map.folliageMap );
 		const maskMap = await loadImageAsync( data.map.trackMap );
 
-		const tree = treeData.scenes[ 0 ].children[ 0 ];
-
+		// const tree = treeData.scenes[ 0 ].children[ 0 ];
+		// const treeCollection = treeData.scenes[ 0 ].children[ 0 ];
+		const treeCollection = treeData.scenes[ 0 ];
 		const posAttrib = level.children[ 0 ].geometry.getAttribute( 'position' );
 
 		const blueNoiseSamples = fromFolliageMap( folliagemapImage, width, depth );
@@ -250,52 +252,45 @@ class ImportAssets extends EventDispatcher {
 
 		console.log( 'tree points:', points.length );
 
-		const sizeVariance = 0.5;
+		const sizeVariance = 1;
 		const trees = new Object3D();
 		trees.name = "Trees";
 
-		var instanceMesh = new InstancedMesh( tree.geometry, tree.material, points.length );
-		trees.add( instanceMesh );
+		const instanceMeshes = treeCollection.children.map( ( tree, index ) => {
 
-		points.forEach( ( point, i ) => {
-
-			var mesh = tree.clone();
-
-			mesh.position.set( point[ 0 ], point[ 1 ], point[ 2 ] );
-			mesh.rotation.x += 90 / 180 * Math.PI;
-			mesh.rotateY( Math.random() * 2 * Math.PI );
-
-			var variance = Math.random() * ( 2 * sizeVariance ) - sizeVariance;
-			mesh.scale.x = mesh.scale.z = 1 + variance;
-			mesh.scale.y += variance;
-
-			mesh.updateMatrix();
-
-			instanceMesh.setMatrixAt( i, mesh.matrix );
+		  const instancedMesh = new InstancedMesh( tree.geometry, tree.material, points.length );
+		  instancedMesh.name = `Tree${index}`;
+		  trees.add( instancedMesh );
+		  return instancedMesh;
 
 		} );
 
+		points.forEach( ( point, i ) => {
+
+		  // Select a random tree from the collection
+		  const randomTreeIndex = Math.floor( Math.random() * treeCollection.children.length );
+		  const tree = treeCollection.children[ randomTreeIndex ];
+		  const instanceMesh = instanceMeshes[ randomTreeIndex ];
+
+		  var mesh = tree.clone();
+
+		  mesh.position.set( point[ 0 ], point[ 1 ], point[ 2 ] );
+		  mesh.rotation.x += 90 / 180 * Math.PI;
+		  mesh.rotateY( Math.random() * 2 * Math.PI );
+
+		  var variance = Math.random() * ( 2 * sizeVariance ) - sizeVariance;
+		  mesh.scale.x = mesh.scale.z = 1 + variance;
+		  mesh.scale.y += variance;
+
+		  mesh.updateMatrix();
+
+		  instanceMesh.setMatrixAt( i, mesh.matrix );
+
+		} );
+
+		instanceMeshes.forEach( ( mesh ) => mesh.instanceMatrix.needsUpdate = true );
+
 		level.add( trees );
-
-		// // Add randomly distributed foliage
-		// // const scope = this;
-		// const params = {
-		// 	w: width - 1,
-		// 	h: depth - 1,
-		// 	mesh: tree,
-		// 	randomness: Math.random,
-		// 	spread: ( v, k, fn, ai ) => this.sampler( v, k, points ), //(v, k) { return v.z > 0 && !(k % 4); }
-		// 	// spread: 0.001,
-		// 	smoothSpread: 0,
-		// 	sizeVariance: 0.5,
-		// 	maxSlope: 0.6283185307179586, // 36deg or 36 / 180 * Math.PI, about the angle of repose of earth
-		// 	maxTilt: Infinity,
-		// 	// maxMeshes: 1000,
-		// 	seaLevel: data.map.seaLevel
-		// };
-
-		// var trees = ScatterMeshes( geo, params );
-		// level.add( trees );
 
 	}
 
