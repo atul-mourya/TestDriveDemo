@@ -12,7 +12,10 @@ import {
 	Object3D,
 	InstancedMesh,
 	MathUtils,
-	DoubleSide
+	Matrix4,
+	Euler,
+	Vector3,
+	Quaternion
 } from "three";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import Terrain from './vendors/terrain/Terrain';
@@ -221,13 +224,11 @@ class ImportAssets extends EventDispatcher {
 	async buildTrees( data, level, width, depth ) {
 
 		const loader = new GLTFLoader();
-		const treeData = await loader.loadAsync( './resources/models/Folliage/tree.glb' );
+		const treeData = await loader.loadAsync( './resources/models/Folliage/TreeCollection.glb' );
 		const folliagemapImage = await loadImageAsync( data.map.folliageMap );
 		const maskMap = await loadImageAsync( data.map.trackMap );
 
-		// const tree = treeData.scenes[ 0 ].children[ 0 ];
-		// const treeCollection = treeData.scenes[ 0 ].children[ 0 ];
-		const treeCollection = treeData.scenes[ 0 ];
+		const treeCollection = treeData.scenes[ 0 ].children[ 0 ];
 		const posAttrib = level.children[ 0 ].geometry.getAttribute( 'position' );
 
 		const blueNoiseSamples = fromFolliageMap( folliagemapImage, width, depth );
@@ -253,45 +254,47 @@ class ImportAssets extends EventDispatcher {
 
 		console.log( 'tree points:', points.length );
 
-		const sizeVariance = 1;
+		const pointGroups = this.distributePoints( points, treeCollection.children.length, 100, 400 );
+
+		const minHeight = 0.5; // Minimum scale height
+		const maxHeight = 3; // Maximum scale height
 		const trees = new Object3D();
 		trees.name = "Trees";
 
 		const instanceMeshes = treeCollection.children.map( ( tree, index ) => {
 
-		  const instancedMesh = new InstancedMesh( tree.geometry, tree.material, points.length );
-		  instancedMesh.name = `Tree${index}`;
-		  trees.add( instancedMesh );
-		  return instancedMesh;
+			tree.material.transparent = false;
+			const instancedMesh = new InstancedMesh( tree.geometry, tree.material, points.length );
+			instancedMesh.name = `Tree${index}`;
+			trees.add( instancedMesh );
+			return instancedMesh;
 
 		} );
 
-		points.forEach( ( point, i ) => {
+		pointGroups.forEach( ( pointGroup, i ) => {
 
-		  // Select a random tree from the collection
-		  const randomTreeIndex = Math.floor( Math.random() * treeCollection.children.length );
-		  const tree = treeCollection.children[ randomTreeIndex ];
-		  const instanceMesh = instanceMeshes[ randomTreeIndex ];
+			const instanceMesh = instanceMeshes[ i ];
+			pointGroup.forEach( ( point, j ) => {
 
-		  var mesh = tree.clone();
+				const matrix = new Matrix4();
+				const position = new Vector3( point[ 0 ], point[ 1 ], point[ 2 ] );
+				const rotation = new Euler( Math.PI / 2, Math.random() * 2 * Math.PI, 0 ); // Rotate around Y-axis
+				const randomHeight = Math.random() * ( maxHeight - minHeight ) + minHeight;
+				const scale = new Vector3( randomHeight, randomHeight, randomHeight );
 
-		  mesh.position.set( point[ 0 ], point[ 1 ], point[ 2 ] );
-		  mesh.rotation.x += 90 / 180 * Math.PI;
-		  mesh.rotateY( Math.random() * 2 * Math.PI );
+				// Apply transformations to the matrix
+				matrix.compose( position, new Quaternion().setFromEuler( rotation ), scale );
 
-		  var variance = Math.random() * ( 2 * sizeVariance ) - sizeVariance;
-		  mesh.scale.x = mesh.scale.z = 1 + variance;
-		  mesh.scale.y += variance;
+				// Set the transformation matrix for the instance
+				instanceMesh.setMatrixAt( j, matrix );
 
-		  mesh.updateMatrix();
+			} );
 
-		  instanceMesh.setMatrixAt( i, mesh.matrix );
+			instanceMeshes.forEach( ( mesh ) => mesh.instanceMatrix.needsUpdate = true );
+
+			level.add( trees );
 
 		} );
-
-		instanceMeshes.forEach( ( mesh ) => mesh.instanceMatrix.needsUpdate = true );
-
-		level.add( trees );
 
 	}
 
@@ -304,6 +307,69 @@ class ImportAssets extends EventDispatcher {
 			terrainMaxHeight: data.map.heightRange[ 0 ],
 			terrainMinHeight: data.map.heightRange[ 1 ]
 		};
+
+	}
+
+	/**
+	 * points array;
+		x:  Number of groups
+		a: Minimum number of points per group
+		b: Maximum number of points per group
+	*/
+	distributePoints( points, x, a, b ) {
+
+		// Helper function to generate a random integer between min and max (inclusive)
+		function getRandomInt( min, max ) {
+
+			return Math.floor( Math.random() * ( max - min + 1 ) ) + min;
+
+		}
+
+		// Helper function to shuffle an array
+		function shuffleArray( array ) {
+
+			for ( let i = array.length - 1; i > 0; i -- ) {
+
+				const j = Math.floor( Math.random() * ( i + 1 ) );
+				[ array[ i ], array[ j ] ] = [ array[ j ], array[ i ] ]; // Swap elements
+
+			}
+
+		}
+
+		// Shuffle the points array to ensure random distribution
+		shuffleArray( points );
+
+		// Initialize the result array to hold x groups
+		let groups = Array.from( { length: x }, () => [] );
+
+		// Track the current index in the shuffled points array
+		let index = 0;
+
+		// Loop over each group to assign points randomly
+		for ( let i = 0; i < x; i ++ ) {
+
+			// Calculate the remaining number of groups
+			let remainingGroups = x - i;
+
+			// Determine the maximum number of points that can be assigned to this group
+			let maxPointsForGroup = Math.min( b, points.length - index - ( remainingGroups - 1 ) * a );
+
+			// Determine the minimum number of points that can be assigned to this group
+			let minPointsForGroup = Math.max( a, points.length - index - ( remainingGroups - 1 ) * b );
+
+			// Randomly determine the number of points to assign to this group
+			let groupSize = getRandomInt( minPointsForGroup, maxPointsForGroup );
+
+			// Assign the points to the current group
+			groups[ i ] = points.slice( index, index + groupSize );
+
+			// Update the index to the next set of points
+			index += groupSize;
+
+		}
+
+		return groups;
 
 	}
 
