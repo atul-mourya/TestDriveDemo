@@ -175,6 +175,7 @@ class ImportAssets extends EventDispatcher {
 		t5 && blendData.push( { texture: t5, glsl: '1.0 - texture2D( texture_4, MyvUv ).a' } );
 
 		terrainMaterial = Terrain.generateBlendedMaterial( blendData, terrainMaterial );
+		// terrainMaterial.wireframe = true;
 
 		// var terrainMaterial2 = new MeshLambertMaterial( {
 		// 	color: 0xffffff,
@@ -189,8 +190,8 @@ class ImportAssets extends EventDispatcher {
 		var o = {
 			xSize: terrainWidth,
 			ySize: terrainDepth,
-			xSegments: terrainWidth - 1,
-			ySegments: terrainDepth - 1,
+			xSegments: ( terrainWidth / 1 ) - 1,
+			ySegments: ( terrainDepth / 1 ) - 1,
 			maxHeight: terrainMaxHeight,
 			minHeight: terrainMinHeight,
 			heightmap: heightmapImage,
@@ -200,7 +201,7 @@ class ImportAssets extends EventDispatcher {
 		var level = Terrain( o );
 
 		//potential cause of offset in mesh layers
-		Gaussian( level.children[ 0 ].geometry, o, 1, 11 );
+		Gaussian( level.children[ 0 ].geometry, o, data.map.blurFilter.standarDeviation, data.map.blurFilter.kernelSize );
 		Terrain.Normalize( level.children[ 0 ], o );
 
 		level.name = "TerrainVisible";

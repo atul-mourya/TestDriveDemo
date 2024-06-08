@@ -8,7 +8,7 @@ let chassisPosition = null;
 let chassisQuaternion = null;
 let vehicleTransform = {
 	wheels: [],
-	chassis: { position: {}, quaternion: {} }
+	chassis: { position: { x: 0, y: 0, z: 0 }, quaternion: { x: 0, y: 0, z: 0, w: 0 } }
 };
 export default class VehiclePhysics {
 
@@ -115,15 +115,13 @@ export default class VehiclePhysics {
 		// this.speedometer.style.left = '0px';
 		// document.body.appendChild( this.speedometer );
 
-		this.isReady = true;
-
 
 	}
 
 	// Sync keybord actions and physics and graphics
-	update( dt ) {
+	update() {
 
-		this.speed = this.vehicle.getCurrentSpeedKmHour();
+		// this.speed = this.vehicle.getCurrentSpeedKmHour();
 		// this.speedometer.innerText = ( this.speed < 0 ? '(R) ' : '' ) + Math.abs( this.speed ).toFixed( 1 ) + ' km/h';
 
 		this.breakingForce = 0;
@@ -182,7 +180,7 @@ export default class VehiclePhysics {
 
 		for ( i = 0; i < this.wheelsCount; i ++ ) {
 
-			this.vehicle.updateWheelTransform( i, true );
+			this.vehicle.updateWheelTransform( i, false );
 			tm = this.vehicle.getWheelTransformWS( i );
 			p = tm.getOrigin();
 			q = tm.getRotation();

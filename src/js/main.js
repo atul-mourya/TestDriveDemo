@@ -18,15 +18,12 @@ import {
 } from 'three';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader';
 import { Water } from 'three/examples/jsm/objects/Water2';
-import Stats from 'stats-gl';
-import RendererStats from './vendors/threex/threex.rendererstats';
 import FrameManager from './FrameManager';
 import PostProcessingManager from './PostProcessingManager';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Worker from './Physics/PhysicsWorker.js?worker';
 
 const _tempVector1 = new Vector3();
-const _tempVector2 = new Vector3();
 const _tempQuaternion = new Quaternion();
 const _tempQuaternion2 = new Quaternion();
 const keysActions = {
@@ -55,7 +52,6 @@ class TestDrive {
 			postprocessing: false,
 
 			graphicsFPSLimit: 60, // frame per second
-			physicsFPSLimit: 60, // frame per second
 
 		};
 
@@ -80,8 +76,6 @@ class TestDrive {
 		this.postProcessor = null;
 
 		this.clock = new Clock();
-
-		if ( this.tracker.analysis ) this.stats();
 
 	}
 
@@ -141,7 +135,7 @@ class TestDrive {
 		this.postProcessor.enabled = this.setting.postprocessing;
 
 		this.assetManager = new ImportAssets( this.setting, this.camera, this.scene, gameData );
-		this.frameManager = new FrameManager( this.renderer, this.scene, this.camera, {}, {}, this.postProcessor );
+		this.frameManager = new FrameManager();
 		this.frameManager.fpsLimit = this.setting.graphicsFPSLimit;
 
 		this.registerEventListeners();
@@ -194,7 +188,6 @@ class TestDrive {
 						);
 
 					} );
-					this.stats.update();
 
 					break;
 				default:
@@ -215,9 +208,9 @@ class TestDrive {
 			this.updatePhysics();
 
 		} );
+		// this.frameManager.initPhysicsFrame( () => this.updatePhysics() );
 
 		this.frameManager.startAnimate();
-		this.frameManager.fpsLimit = this.setting.physicsFPSLimit;
 		this.onWindowResize();
 
 	}
@@ -415,26 +408,6 @@ class TestDrive {
 		// this.postProcessor.setSize( this.canvas.width, this.canvas.height );
 		this.camera.aspect = this.canvas.width / this.canvas.height;
 		this.camera.updateProjectionMatrix();
-
-	}
-
-	stats() {
-
-		this.stats = new Stats( {
-			precision: 1,
-			horizontal: false
-		} );
-		this.stats.init( this.renderer );
-		this.stats.dom.style.position = 'absolute';
-		this.stats.dom.style.top = '0px';
-		this.stats.dom.style.left = '00px';
-		document.body.appendChild( this.stats.dom );
-
-		// this.rendererStats = new RendererStats();
-		// this.rendererStats.domElement.style.position = 'absolute';
-		// this.rendererStats.domElement.style.left = '0px';
-		// this.rendererStats.domElement.style.top = '0px';
-		// document.body.appendChild( this.rendererStats.domElement );
 
 	}
 

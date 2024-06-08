@@ -380,7 +380,7 @@ const Terrain = function ( options ) {
 	}
 
 	Terrain.fromArray1D( mesh.geometry.attributes.position.array, zs );
-	Terrain.Normalize( mesh, options );
+	// Terrain.Normalize( mesh, options );
 
 	// lod.addLevel( mesh, options.unit * 10 * Math.pow( 2, lodLevel ) );
 

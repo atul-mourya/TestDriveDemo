@@ -11,13 +11,10 @@ function Physics( AmmoLib, terrainData, position, quaternion ) {
 	const solver = new AmmoLib.btSequentialImpulseConstraintSolver();
 
 	const physicsWorld = new AmmoLib.btDiscreteDynamicsWorld( dispatcher, broadphase, solver, collisionConfiguration );
-	physicsWorld.setGravity( new AmmoLib.btVector3( 0, - 9.75, 0 ) );
-
-	const fpsLimit = 60;
-
-	let time = 0;
+	physicsWorld.setGravity( new AmmoLib.btVector3( 0, - 9.8, 0 ) );
 
 	let needsReset = false;
+	const maxSubSteps = 10; // Maximum number of sub-steps
 
 	const terrainActor = new TerrainPhysics( AmmoLib, terrainData );
 	physicsWorld.addRigidBody( terrainActor.body );
@@ -25,17 +22,6 @@ function Physics( AmmoLib, terrainData, position, quaternion ) {
 	const vehicleActor = new VehiclePhysics( AmmoLib, physicsWorld, position, quaternion );
 	physicsWorld.addRigidBody( vehicleActor.body );
 	physicsWorld.addAction( vehicleActor.vehicle );
-
-	let isReady = true;
-	// startSimilation();
-
-
-	function startSimulation( dt ) {
-
-		update( dt );
-
-
-	}
 
 	function reset( chassis ) {
 
@@ -47,9 +33,8 @@ function Physics( AmmoLib, terrainData, position, quaternion ) {
 
 		if ( ! needsReset ) {
 
-			updateTransform = vehicleActor.update( dt );
-			physicsWorld.stepSimulation( dt, 1 );
-			time += dt;
+			physicsWorld.stepSimulation( dt, maxSubSteps, dt / 10 );
+			updateTransform = vehicleActor.update();
 
 		} else {
 
@@ -64,14 +49,10 @@ function Physics( AmmoLib, terrainData, position, quaternion ) {
 
 	return {
 		physicsWorld: physicsWorld,
-		fpsLimit: fpsLimit,
-		time: time,
 		needsReset: needsReset,
 		terrainActor: terrainActor,
 		vehicleActor: vehicleActor,
-		isReady: isReady,
 
-		startSimulation: startSimulation,
 		reset: reset,
 		update: update,
 	};

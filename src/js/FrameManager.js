@@ -1,23 +1,21 @@
-import { EventDispatcher } from "three";
+import Stats from 'three/examples/jsm/libs/stats.module';
 
-class FrameManager extends EventDispatcher {
+class FrameManager {
 
-	constructor( renderer, scene, camera, materialManager, hudManager, postProcessor = {} ) {
-
-		super();
+	constructor() {
 
 		let doAnimate = false;
 		let animationFrameRequestId = null;
 
+		this.stats = new Stats();
+		document.body.appendChild( this.stats.dom );
 
-		this.scene = scene;
-		this.camera = camera;
 		this.fpsLimit = 60;
 
 		this.startAnimate = () => doAnimate = true;
 		this.stopAnimate = () => doAnimate = false;
 
-		this.initAnimateFrame = callback => {
+		this.initAnimateFrame = ( callback ) => {
 
 			const _animateFrame = () => {
 
@@ -26,14 +24,13 @@ class FrameManager extends EventDispatcher {
 					animationFrameRequestId = requestAnimationFrame( _animateFrame );
 					if ( doAnimate ) {
 
-						// hudManager.onRenderStart();
-						this.render( callback );
-						// hudManager.onRenderEnd();
+						this.stats.begin();
+						callback && callback();
+						this.stats.end();
 
 					}
 
 				}, 1000 / this.fpsLimit );
-
 
 			};
 
@@ -41,24 +38,14 @@ class FrameManager extends EventDispatcher {
 
 		};
 
-		this.render = callback => {
-
-			// postProcessor.enabled ? postProcessor.update() : renderer.render( this.scene, this.camera );
-			callback && callback();
-
-		};
-
 		this.dispose = () => {
 
 			cancelAnimationFrame( animationFrameRequestId );
+			document.body.removeChild( this.stats.dom );
 
 		};
 
-		this.getDoAnimate = () =>{
-
-			return doAnimate;
-
-		};
+		this.getDoAnimate = () => doAnimate;
 
 	}
 
