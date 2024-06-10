@@ -109,7 +109,6 @@ class TestDrive {
 		this.orbitControls.listenToKeyEvents( window );
 		this.orbitControls.enableDamping = false;
 		this.orbitControls.dampingFactor = 0.05;
-		this.orbitControls.screenSpacePanning = false;
 		this.orbitControls.minDistance = 100;
 		this.orbitControls.maxDistance = 5000;
 		this.orbitControls.zoomToCursor = true;

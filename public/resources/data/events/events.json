@@ -8,13 +8,13 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
-                "seaLevel": -32,
+                "seaLevel": -30,
                 "heightMap": "./resources/data/events/alps/green/h.png",
                 "preview": "./resources/data/events/alps/green/ss.jpg",
                 "smooth": "none",
                 "blurFilter": {
                     "standardDeviation": 1,
-                    "kernelSize": 11
+                    "kernelSize": 5
                 }
             }
         },
@@ -26,7 +26,7 @@
             "map": {
                 "size": [800, 800],
                 "heightRange": [40, -40],
-                "seaLevel": -13.5,
+                "seaLevel": -13,
                 "heightMap": "./resources/data/events/alps/lake/h.png",
                 "folliageMap": "./resources/data/events/alps/lake/f.png",
                 "trackMap": "./resources/data/events/alps/lake/trackmap_8k.png",
