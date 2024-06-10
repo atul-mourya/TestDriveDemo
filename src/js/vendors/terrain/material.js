@@ -12,6 +12,20 @@ const glslifyNumber = n => Number.isInteger( n ) ? `${n}.0` : `${n}`;
 /**
  * TerrainMaterial extends MeshStandardMaterial to support blended textures
  * based on vertex height and custom GLSL expressions.
+ *
+ * Generate a material that blends together textures based on vertex height.
+ *
+ * Inspired by http://www.chandlerprall.com/2011/06/blending-webgl-textures/
+ *
+ * Usage:
+ *
+ *    blendData = [
+ *      {texture: THREE.ImageUtils.loadTexture('img1.jpg')},
+ *      {texture: THREE.ImageUtils.loadTexture('img2.jpg'), levels: [-80, -35, 20, 50]},
+ *      {texture: THREE.ImageUtils.loadTexture('img3.jpg'), levels: [20, 50, 60, 85]},
+ *      {texture: THREE.ImageUtils.loadTexture('img4.jpg'), glsl: '1.0 - smoothstep(65.0 + smoothstep(-256.0, 256.0, vPosition.x) * 10.0, 80.0, vPosition.z)'},
+ *    ];
+ *
  */
 class TerrainMaterial extends MeshStandardMaterial {
 
@@ -189,10 +203,16 @@ class TerrainMaterial extends MeshStandardMaterial {
 				let blendAmount;
 				if ( levels !== undefined ) {
 
+					// Must fade in; can't start and stop at the same point.
+					// So, if levels are too close, move one of them slightly.
 					const v = levels.map( glslifyNumber );
 					if ( v[ 1 ] - v[ 0 ] < 1 ) v[ 0 ] = glslifyNumber( Number( v[ 0 ] ) - 1 );
 					if ( v[ 3 ] - v[ 2 ] < 1 ) v[ 3 ] = glslifyNumber( Number( v[ 3 ] ) + 1 );
 
+					// The transparency of the new texture when it is layered on top of the existing color at this texel is
+					// (how far between the start-blending-in and fully-blended-in levels the current vertex is) +
+					// (how far between the start-blending-out and fully-blended-out levels the current vertex is)
+					// So the opacity is 1.0 minus that.
 					blendAmount = `1.0 - smoothstep(${v[ 0 ]}, ${v[ 1 ]}, vPosition.z) + smoothstep(${v[ 2 ]}, ${v[ 3 ]}, vPosition.z)`;
 
 				} else {
