@@ -226,13 +226,13 @@ class ImportAssets extends EventDispatcher {
 		const loader = new GLTFLoader();
 		const treeData = await loader.loadAsync( './resources/models/Folliage/TreeCollection.glb' );
 		const folliagemapImage = await loadImageAsync( data.map.folliageMap );
-		const maskMap = await loadImageAsync( data.map.trackMap );
+		const maskMap = data.map.trackMap && await loadImageAsync( data.map.trackMap );
 
 		const treeCollection = treeData.scenes[ 0 ].children[ 0 ];
 		const posAttrib = level.children[ 0 ].geometry.getAttribute( 'position' );
 
 		const blueNoiseSamples = fromFolliageMap( folliagemapImage, width, depth );
-		let points = excludePoints( blueNoiseSamples, maskMap, width, depth );
+		let points = maskMap ? excludePoints( blueNoiseSamples, maskMap, width, depth ) : blueNoiseSamples;
 
 		points = points.filter( ( point, i ) => {
 

@@ -10,9 +10,8 @@
                 "heightRange": [50, -50],
                 "seaLevel": -32,
                 "heightMap": "./resources/data/events/alps/green/h.png",
-                "smooth": "none",
-                "model": "./resources/data/events/alps/green/model.json",
                 "preview": "./resources/data/events/alps/green/ss.jpg",
+                "smooth": "none",
                 "blurFilter": {
                     "standardDeviation": 1,
                     "kernelSize": 11
@@ -31,9 +30,8 @@
                 "heightMap": "./resources/data/events/alps/lake/h.png",
                 "folliageMap": "./resources/data/events/alps/lake/f.png",
                 "trackMap": "./resources/data/events/alps/lake/trackmap_8k.png",
-                "smooth": "none",
-                "model": "/resources/data/events/alps/lake/model.json",
                 "preview": "./resources/data/events/alps/lake/ss.jpg",
+                "smooth": "none",
                 "blurFilter": {
                     "standardDeviation": 1,
                     "kernelSize": 11
@@ -51,8 +49,9 @@
                 "heightRange": [50, -50],
                 "seaLevel": -30,
                 "heightMap": "./resources/data/events/alps/mountain/h.png",
-                "smooth": "none",
+                "folliageMap": "./resources/data/events/alps/mountain/f.png",
                 "preview": "./resources/data/events/alps/mountain/ss.jpg",
+                "smooth": "none",
                 "blurFilter": {
                     "standardDeviation": 1,
                     "kernelSize": 11
@@ -70,8 +69,9 @@
                 "heightRange": [50, -50],
                 "seaLevel": -30,
                 "heightMap": "./resources/data/events/alps/rocky/h.png",
-                "smooth": "none",
+                "folliageMap": "./resources/data/events/alps/rocky/f.png",
                 "preview": "./resources/data/events/alps/rocky/ss.jpg",
+                "smooth": "none",
                 "blurFilter": {
                     "standardDeviation": 1,
                     "kernelSize": 11
@@ -88,8 +88,9 @@
                 "heightRange": [50, -50],
                 "seaLevel": -13.5,
                 "heightMap": "./resources/data/events/alps/dawn/h.png",
-                "smooth": "none",
+                "folliageMap": "./resources/data/events/alps/dawn/f.png",
                 "preview": "./resources/data/events/alps/dawn/ss.jpg",
+                "smooth": "none",
                 "blurFilter": {
                     "standardDeviation": 1,
                     "kernelSize": 11
@@ -106,9 +107,11 @@
             "map": {
                 "size": [1000, 1000],
                 "heightRange": [50, -50],
+                "seaLevel": -13.5,
                 "heightMap": "./resources/data/events/chasing/daybreak/h.png",
-                "smooth": "none",
+                "folliageMap": "./resources/data/events/chasing/daybreak/f.png",
                 "preview": "./resources/data/events/chasing/daybreak/ss.jpg",
+                "smooth": "none",
                 "blurFilter": {
                     "standardDeviation": 1,
                     "kernelSize": 11
