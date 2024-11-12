@@ -1,0 +1,89 @@
+{
+    "level": {
+      "name": "Evening Lake",
+      "comment": "Sunset rush",
+      "author": "Onsemeliot",
+      "description": "fast, smooth, rougher shortcuts",
+      "screenshot": "ss.jpg",
+      "minimap": "mm.jpg",
+      "terrain": {
+        "heightmap": "h.png",
+        "terrainmap": "t.png",
+        "colormap": "c.jpg",
+        "foliagemap": "f.png",
+        "hudmap": "c.jpg",
+        "tilesize": "32",
+        "horizontalscale": "2.5",
+        "verticalscale": "1.2",
+        "blurfilter": {
+          "row": [
+            { "data": "0.01001 0.01001 0.01001 0.01001 0.01001" },
+            { "data": "0.01001 0.01001 0.01001 0.01001 0.01001" },
+            { "data": "0.01001 0.01001 0.01001 0.01001 0.01001" },
+            { "data": "0.01001 0.01001 0.01001 0.01001 0.01001" },
+            { "data": "0.01001 0.01001 0.01001 0.01001 0.01001" }
+          ]
+        },
+        "foliageband": {
+          "middle": "0.6",
+          "range": "0.5",
+          "density": "0.0004",
+          "sprite": "/textures/veg/grass.png",
+          "spritecount": "1"
+        }
+      },
+      "weather": {
+        "cloudtexture": "/textures/sky/overcast.jpg",
+        "cloudscrollrate": "0.005",
+        "fogcolor": "0.2, 0.1, 0.0",
+        "fogdensity": "0.02",
+        "fogdensitysky": "1"
+      },
+      "water": {
+        "height": "1.7",
+        "watertexture": "/textures/water/dark-water.png"
+      },
+      "vehicleoption": [
+        { "type": "/vehicles/seat/seat.vehicle" },
+        { "type": "/vehicles/evo/evo.vehicle" },
+        { "type": "/vehicles/focus/focus.vehicle" }
+      ],
+      "race": {
+        "coordscale": "2.5, 2.5",
+        "targettime": "270.0",
+        "startposition": { "pos": "53, 96", "oridegrees": "180" },
+        "checkpoint": [
+          { "coords": "186, 201" },
+          { "coords": "217, 60" },
+          { "coords": "430, 133" },
+          { "coords": "455, 436" },
+          { "coords": "408, 360" },
+          { "coords": "360, 467" },
+          { "coords": "195, 445" },
+          { "coords": "73, 448" },
+          { "coords": "55, 120" }
+        ],
+        "codrivercp": [
+          { "coords": "57, 75", "notes": "easy left into medium left" },
+          { "coords": "141, 112", "notes": "chicane right into medium right" },
+          { "coords": "252, 131", "notes": "easy left into medium left dont cut" },
+          { "coords": "292, 40", "notes": "square left dont cut" },
+          { "coords": "331, 122", "notes": "medium right" },
+          { "coords": "356, 187", "notes": "hairpin right" },
+          { "coords": "395, 174", "notes": "medium left long" },
+          { "coords": "424, 200", "notes": "easy right" },
+          { "coords": "461, 337", "notes": "medium left long" },
+          { "coords": "385, 390", "notes": "hairpin right into flat right" },
+          { "coords": "364, 424", "notes": "hairpin left into flat left" },
+          { "coords": "368, 345", "notes": "hairpin right into flat right" },
+          { "coords": "327, 376", "notes": "hairpin left into flat left" },
+          { "coords": "325, 331", "notes": "hairpin right cut into flat right" },
+          { "coords": "277, 401", "notes": "square left" },
+          { "coords": "222, 454", "notes": "hard left into medium right long" },
+          { "coords": "142, 388", "notes": "medium left long" },
+          { "coords": "79, 297", "notes": "easy right" },
+          { "coords": "73, 179", "notes": "over finish" }
+        ]
+      }
+    }
+  }

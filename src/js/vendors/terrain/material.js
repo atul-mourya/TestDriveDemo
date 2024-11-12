@@ -37,6 +37,8 @@ class TerrainMaterial extends MeshStandardMaterial {
 	static async create( data ) {
 
 		const material = new TerrainMaterial();
+		material.roughness = 1;
+		material.metalness = 0;
 		await material.loadTextures( data );
 		return material;
 
@@ -75,7 +77,7 @@ class TerrainMaterial extends MeshStandardMaterial {
 
 		// Configure each texture
 		this.configureTexture( baseTexture, { repeat: [ 200, 200 ] } );
-		this.configureTexture( grassTexture, { repeat: [ 200, 200 ] } );
+		this.configureTexture( grassTexture, { repeat: [ 200, 200 ], anisotropy: 16 } );
 		this.configureTexture( rockTexture, { repeat: [ 20, 20 ] } );
 		this.configureTexture( snowTexture );
 		if ( trackTexture ) {

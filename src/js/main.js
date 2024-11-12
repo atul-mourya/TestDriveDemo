@@ -231,7 +231,7 @@ class TestDrive {
 		const pmremGenerator = new PMREMGenerator( this.renderer );
 		pmremGenerator.compileEquirectangularShader();
 		var rgbe_loader = new RGBELoader();
-		const texture = await rgbe_loader.loadAsync( "./images/cannon_2k.hdr" );
+		const texture = await rgbe_loader.loadAsync( "./images/partly_cloudy_puresky_1k.pic" );
 		texture.colorSpace = LinearSRGBColorSpace;
 		const envMap = pmremGenerator.fromEquirectangular( texture ).texture;
 		this.scene.environment = envMap;
@@ -242,7 +242,7 @@ class TestDrive {
 		this.scene.environmentIntensity = 1;
 
 		this.renderer.toneMapping = ACESFilmicToneMapping;
-		this.renderer.toneMappingExposure = 0.85;
+		this.renderer.toneMappingExposure = 1;
 
 		const water = new Water( new PlaneGeometry( 16384 + 1024, 16384 + 1024, 16, 16 ), {
 			color: new Color( 0xc7cbc6 ),
